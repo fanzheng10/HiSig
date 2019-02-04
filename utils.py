@@ -96,5 +96,29 @@ def redistribute_gene_score(coef, mat, signal):
         if np.sum(idx) == 0:
             continue
         out = mat_gene_feature.data[idx] * vsignal[mat_gene_feature.row[idx]] / scale[0]
-        outputs.append(out)
+        outputs.append((mat_gene_feature.row[idx], mat_gene_feature.col[idx], out))
     return outputs
+
+def term_specific_rank(ont, coef_adjust, term_names, outf, print_limit=25):
+    '''
+    
+    :param ont: an Ontology object  
+    :param coef_adjust: adjusted regression coefficient, a dictionary that is the output from the {redistribute_gene_score} function
+    :param term_names: terms names of interest
+    :param outf: output dataframe path
+    :return: df_out: output dataframe
+    '''
+    df_coef_adjust = pd.DataFrame.from_dicts({'gene':coef_adjust[0], 'feature':coef_adjust[1], 'weight':coef_adjust[2]})
+    out_records = []
+    for t in term_names:
+        tid = ont.terms.index(t)
+        df_coef_sub = df_coef_adjust.loc[df_coef_adjust['feature'] == tid+ len(ont.genes), :]
+        df_coef_sub.sort_values(by='weight', ascending=False, inplace=True)
+        if df_coef_sub.shape[0] > print_limit:
+            df_coef_sub = df_coef_sub.iloc[:print_limit, :]
+        df_coef_sub['gene_name'] = np.array([ont.genes[x] for x in df_coef_sub['gene'].tolist()])
+        df_coef_sub = df_coef_sub.round(3)
+        out_records.append((t, '|'.join(df_coef_sub['gene_name'].tolist()), '|'.join(df_coef_sub['weight'].tolist())))
+    df_out = pd.DataFrame.from_records(out_records)
+    df_out.to_csv(outf, sep='\t', index=False, header=False)
+    return df_out
