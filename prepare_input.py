@@ -30,9 +30,9 @@ def prepare_input(ont, sig, outf, scut=2):
             signal[g] = s
         for g in ont.genes:
             if g in signal:
-                ofh.write('{}\t{}\n'.format(g, signal[g]))
+                ofh.write('{}\n'.format(signal[g]))
             else:
-                ofh.write('{}\t0.0\n'.format(g))
+                ofh.write('0.0\n')
 
     with open('terms.txt', 'w') as fh:
         for i in range(len(ont.terms)):
