@@ -86,7 +86,9 @@ def redistribute_gene_score(coef, mat, signal):
     mat_feature_lambda = np.array(pd.read_table(coef, index_col=0))
     coo_gene_feature = np.loadtxt(mat).astype(int)
     vsignal = np.loadtxt(signal)
-    outputs = []
+    # outputs = ([], [], [], [])
+    outputs = {}
+
     for i in range(mat_feature_lambda.shape[1]):
         mat_gene_feature = coo_matrix((mat_feature_lambda[:, i][coo_gene_feature[:, 1]],
                              (coo_gene_feature[:,0], coo_gene_feature[:,1])))
@@ -96,29 +98,55 @@ def redistribute_gene_score(coef, mat, signal):
         if np.sum(idx) == 0:
             continue
         out = mat_gene_feature.data[idx] * vsignal[mat_gene_feature.row[idx]] / scale[0]
-        outputs.append((mat_gene_feature.row[idx], mat_gene_feature.col[idx], out))
+        outputs[i] = (mat_gene_feature.row[idx], mat_gene_feature.col[idx], out)
+        # outputs[0].extend(mat_gene_feature.row[idx])
+        # outputs[1].extend(mat_gene_feature.col[idx])
+        # outputs[2].extend(out)
+        # outputs[3].extend([i for k in range(len(out))])
     return outputs
 
-def term_specific_rank(ont, coef_adjust, term_names, outf, print_limit=25):
+def feature_best_lambda(coef):
+    '''
+    for each feature, get the lambda when it achieves the highest importance
+    :param coef: a [n_feature, n_lambda] matrix
+    :return: two vector; feature index and the best lambda of these feature. Features that are never positive are omitted
+    '''
+    mat_feature_lambda = np.array(pd.read_table(coef, index_col=0))
+    idx = np.sum(mat_feature_lambda, axis=0) > 0
+    mat_feature_lambda_scaled = mat_feature_lambda[:, idx] / (np.sum(mat_feature_lambda, axis=0)[idx])
+    feature_argmax = np.argmax(mat_feature_lambda_scaled, axis=1)
+    idy = np.where(np.sum(mat_feature_lambda_scaled, axis=1) != 0)[0]
+    mat_feature_argmax = np.argmax(mat_feature_lambda_scaled, axis=1)
+    return idy, mat_feature_argmax[idy] + (mat_feature_lambda.shape[1] -np.sum(idx))
+
+def term_specific_rank(ont, coef_adjust, term_names, term_best_lambda, outf=None, print_limit=25):
     '''
     
     :param ont: an Ontology object  
     :param coef_adjust: adjusted regression coefficient, a dictionary that is the output from the {redistribute_gene_score} function
     :param term_names: terms names of interest
+    :param term_best_lambda: a dictionary for terms' best lambda
     :param outf: output dataframe path
     :return: df_out: output dataframe
     '''
-    df_coef_adjust = pd.DataFrame.from_dicts({'gene':coef_adjust[0], 'feature':coef_adjust[1], 'weight':coef_adjust[2]})
+    # df_coef_adjust = pd.DataFrame.from_dict({'gene':coef_adjust[0], 'feature':coef_adjust[1], 'weight':coef_adjust[2], 'lambda':coef_adjust[3]})
     out_records = []
     for t in term_names:
         tid = ont.terms.index(t)
-        df_coef_sub = df_coef_adjust.loc[df_coef_adjust['feature'] == tid+ len(ont.genes), :]
+        lam = term_best_lambda[tid+len(ont.genes)]
+        coef_adjust_i = coef_adjust[lam]
+        df_coef_adjust = pd.DataFrame.from_dict(
+            {'gene': coef_adjust_i[0], 'feature': coef_adjust_i[1], 'weight': coef_adjust_i[2]})
+
+        df_coef_sub = df_coef_adjust.loc[(df_coef_adjust['feature'] == tid+ len(ont.genes)), :]
         df_coef_sub.sort_values(by='weight', ascending=False, inplace=True)
         if df_coef_sub.shape[0] > print_limit:
             df_coef_sub = df_coef_sub.iloc[:print_limit, :]
         df_coef_sub['gene_name'] = np.array([ont.genes[x] for x in df_coef_sub['gene'].tolist()])
         df_coef_sub = df_coef_sub.round(3)
+        df_coef_sub['weight'] = df_coef_sub['weight'].astype(str)
         out_records.append((t, '|'.join(df_coef_sub['gene_name'].tolist()), '|'.join(df_coef_sub['weight'].tolist())))
     df_out = pd.DataFrame.from_records(out_records)
-    df_out.to_csv(outf, sep='\t', index=False, header=False)
+    if outf!=None:
+        df_out.to_csv(outf, sep='\t', index=False, header=False)
     return df_out
