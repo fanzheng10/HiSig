@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import itertools
 from scipy.sparse import *
 from scipy.stats import rankdata
 
@@ -75,13 +76,13 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
     return df_out
 
 
-def redistribute_gene_score(coef, mat, signal):
+def redistribute_gene_score(coef, mat, signal, exponential=False):
     '''
     calculate the redistributed gene score after the signal on genes was redistributed by regression
     :param coef: path to input file, a data frame, with dims [n_features, n_lambdas]
     :param mat: a binary sparse matrix in text format, with dims [n_genes, n_features]
     :param signal: a [n_genes, ] vector of the original signal on gene
-    :return: 
+    :return: outputs: a dictionary, lambda being the key, and each value is a [n_genes, n_systems] (in sparse form, so 3 lists)
     '''
     mat_feature_lambda = np.array(pd.read_table(coef, index_col=0))
     coo_gene_feature = np.loadtxt(mat).astype(int)
@@ -93,16 +94,23 @@ def redistribute_gene_score(coef, mat, signal):
         mat_gene_feature = coo_matrix((mat_feature_lambda[:, i][coo_gene_feature[:, 1]],
                              (coo_gene_feature[:,0], coo_gene_feature[:,1])))
         # rescale this
+        scale = np.sum(mat_gene_feature, axis=1)
         idx = (mat_gene_feature.data > 0) & (vsignal[mat_gene_feature.row] >0)
-        scale = np.asarray(np.sum(mat_gene_feature, axis=1)[mat_gene_feature.row[idx]].T)
         if np.sum(idx) == 0:
             continue
-        out = mat_gene_feature.data[idx] * vsignal[mat_gene_feature.row[idx]] / scale[0]
-        outputs[i] = (mat_gene_feature.row[idx], mat_gene_feature.col[idx], out)
-        # outputs[0].extend(mat_gene_feature.row[idx])
-        # outputs[1].extend(mat_gene_feature.col[idx])
-        # outputs[2].extend(out)
-        # outputs[3].extend([i for k in range(len(out))])
+        # out = mat_gene_feature.data[idx] * vsignal[mat_gene_feature.row[idx]] / scale[0]
+        out = mat_gene_feature.data[idx] / np.asarray(scale[mat_gene_feature.row[idx]].T)[0] # note that I decided to output the rescaled beta, not yet multiply to signal
+        if exponential:
+            mat_gene_feature_2 = coo_matrix((np.exp(out), (mat_gene_feature.row[idx], mat_gene_feature.col[idx])))
+            scale_2 = np.sum(mat_gene_feature_2, axis=1)
+            idx2 = (mat_gene_feature_2.data > 0) & (vsignal[mat_gene_feature_2.row] >0)
+            if np.sum(idx2) == 0:
+                continue
+            out2 = mat_gene_feature_2.data[idx2] / np.asarray(scale_2[mat_gene_feature_2.row[idx2]].T)[0]
+            outputs[i] = (mat_gene_feature_2.row[idx2], mat_gene_feature_2.col[idx2], out2)
+        else:
+            outputs[i] = (mat_gene_feature.row[idx], mat_gene_feature.col[idx], out)
+
     return outputs
 
 def feature_best_lambda(coef):
@@ -114,7 +122,6 @@ def feature_best_lambda(coef):
     mat_feature_lambda = np.array(pd.read_table(coef, index_col=0))
     idx = np.sum(mat_feature_lambda, axis=0) > 0
     mat_feature_lambda_scaled = mat_feature_lambda[:, idx] / (np.sum(mat_feature_lambda, axis=0)[idx])
-    feature_argmax = np.argmax(mat_feature_lambda_scaled, axis=1)
     idy = np.where(np.sum(mat_feature_lambda_scaled, axis=1) != 0)[0]
     mat_feature_argmax = np.argmax(mat_feature_lambda_scaled, axis=1)
     return idy, mat_feature_argmax[idy] + (mat_feature_lambda.shape[1] -np.sum(idx))
@@ -150,3 +157,55 @@ def term_specific_rank(ont, coef_adjust, term_names, term_best_lambda, outf=None
     if outf!=None:
         df_out.to_csv(outf, sep='\t', index=False, header=False)
     return df_out
+
+
+def estimate_nsamples_per_term(ont, coef_adjust_expo, term_names, term_best_lambda, tumor_profile, signal=None, outf=None):
+    '''
+    to estimate number of samples mutated by each system
+    :param ont: an Ontology object
+    :param coef_adjust: "exponentially adjusted" regression coefficient, a dictionary that is the output from the {redistribute_gene_score} function
+    :param term_names: terms names of interest
+    :param test_best_lambda: a dictionary for terms' best lambda
+    :param tumor_profile: a [n_gene, n_patients] data frame (in-house ONP format)
+    :param signal #TODO: think about this
+    :return: df_out: output dataframe
+    '''
+    dict_system_count_inferred = {}
+    for tumid in tumor_profile.columns.tolist():
+        genes_mutated_in_sample = []
+        for g in tumor_profile[tumid].notnull().index.tolist():
+            if g in ont.genes:
+                genes_mutated_in_sample.append(ont.genes.index(g))
+        for term_name in term_names:
+            term_id = ont.terms.index(term_name)
+            lam = term_best_lambda[term_id + len(ont.genes)]
+            coef_adjust_sel = coef_adjust[lam] # [n_genes, n_system] rescaled beta matrix
+            # genes_in_term = [ont.genes[gid] for gid  in ont.term_2_gene[term_name]]
+            gene_ids_in_term = ont.term_2_gene[term_name]
+            genes_hit = set(genes_mutated_in_sample).intersection(gene_ids_in_term)
+            multiplicon = 1
+            for g_hit in genes_hit:
+                beta_scaled = coef_adjust_sel[g_hit, len(ont.genes) + term_id]
+                if coef_adjust_sel[g_hit, len(ont.genes) + term_id] == 1: # this gene is only mutated in this system
+                    # TODO: wrong, still in sparse form
+                    multiplicon = 0
+                    break
+                else:
+                    multiplicon *= 1-coef_adjust_sel
+
+            genes_activated = list(set(tumor_profile[tumid
+                                       ].notnull().index.tolist()).intersection(genes_in_term))
+
+
+
+    for t in term_names:
+        tid = ont.terms.index(t)
+        lam = term_best_lambda[tid+len(ont.genes)]
+        coef_adjust_i = coef_adjust[lam] # [n_genes, n_system] rescaled beta matrix
+
+
+
+
+
+
+

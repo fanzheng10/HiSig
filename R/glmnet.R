@@ -10,13 +10,13 @@ outfname <- args[3]
 mode = 2 # mode 2 have the most reasonable results in this setting
 # mode <- as.integer(args[4]) # if 1, calculate p-value by weight; if 2, calculate p-value by proportion
 batch = 1000
-if (length(args) ==5) {
-  batch = as.integer(args[5])
+if (length(args) ==4) {
+  batch = as.integer(args[4])
 }
 batch_size = 10
 
 max_cores = 7
-n_cores = min(detectCores-1, max_cores)
+n_cores = min(detectCores()-1, max_cores)
 
 
 X <- as.matrix(read.table(xfname, header=F))
