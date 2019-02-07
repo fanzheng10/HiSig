@@ -159,7 +159,7 @@ def term_specific_rank(ont, coef_adjust, term_names, term_best_lambda, outf=None
     return df_out
 
 
-def estimate_nsamples_per_term(ont, coef_adjust_expo, term_names, term_best_lambda, tumor_profile, signal=None, outf=None):
+def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile):
     '''
     to estimate number of samples mutated by each system
     :param ont: an Ontology object
@@ -170,42 +170,34 @@ def estimate_nsamples_per_term(ont, coef_adjust_expo, term_names, term_best_lamb
     :param signal #TODO: think about this
     :return: df_out: output dataframe
     '''
-    dict_system_count_inferred = {}
-    for tumid in tumor_profile.columns.tolist():
-        genes_mutated_in_sample = []
-        for g in tumor_profile[tumid].notnull().index.tolist():
-            if g in ont.genes:
-                genes_mutated_in_sample.append(ont.genes.index(g))
-        for term_name in term_names:
+    mat_system_count_inferred = np.zeros((len(term_names), tumor_profile.shape[1]))
+    for i in range(len(tumor_profile.columns.tolist())):
+        tumid = tumor_profile.columns.tolist()[i]
+        genes_mutated_in_sample = [g for g in tumor_profile[tumor_profile[tumid].notnull()].index.tolist() if g in ont.genes]
+        for j in range(len(term_names)):
+            term_name = term_names[j]
             term_id = ont.terms.index(term_name)
             lam = term_best_lambda[term_id + len(ont.genes)]
-            coef_adjust_sel = coef_adjust[lam] # [n_genes, n_system] rescaled beta matrix
-            # genes_in_term = [ont.genes[gid] for gid  in ont.term_2_gene[term_name]]
+            coef_adjust_i = coef_adjust[lam] # [n_genes, n_system] rescaled beta matrix
+            df_coef_adjust = pd.DataFrame.from_dict(
+                {'gene': coef_adjust_i[0], 'feature': coef_adjust_i[1], 'weight': coef_adjust_i[2]})
+            df_coef_adjust['weight'] = df_coef_adjust['weight'].round(6)
+
             gene_ids_in_term = ont.term_2_gene[term_name]
-            genes_hit = set(genes_mutated_in_sample).intersection(gene_ids_in_term)
+            genes_hit = [g for g in gene_ids_in_term if ont.genes[g] in genes_mutated_in_sample]
             multiplicon = 1
-            for g_hit in genes_hit:
-                beta_scaled = coef_adjust_sel[g_hit, len(ont.genes) + term_id]
-                if coef_adjust_sel[g_hit, len(ont.genes) + term_id] == 1: # this gene is only mutated in this system
-                    # TODO: wrong, still in sparse form
+            for g in genes_hit:
+                df_coef_adjust_g = df_coef_adjust.loc[df_coef_adjust['gene'] == g]
+                if df_coef_adjust_g.shape[0] == 0: # mutated but doesn't contribute signal
+                    continue
+                elif df_coef_adjust_g.shape[0] == 1:
                     multiplicon = 0
                     break
                 else:
-                    multiplicon *= 1-coef_adjust_sel
-
-            genes_activated = list(set(tumor_profile[tumid
-                                       ].notnull().index.tolist()).intersection(genes_in_term))
-
-
-
-    for t in term_names:
-        tid = ont.terms.index(t)
-        lam = term_best_lambda[tid+len(ont.genes)]
-        coef_adjust_i = coef_adjust[lam] # [n_genes, n_system] rescaled beta matrix
-
-
-
-
-
-
-
+                    p_gt = np.array(df_coef_adjust_g.loc[df_coef_adjust_g['feature'] == (len(ont.genes) + term_id), 'weight'])
+                    if len(p_gt) == 0:
+                        continue
+                    multiplicon *= (1-p_gt[0])
+            print(multiplicon)
+            mat_system_count_inferred[j, i] += 1 - multiplicon
+    return mat_system_count_inferred
