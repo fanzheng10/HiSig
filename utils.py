@@ -126,40 +126,42 @@ def feature_best_lambda(coef):
     mat_feature_argmax = np.argmax(mat_feature_lambda_scaled, axis=1)
     return idy, mat_feature_argmax[idy] + (mat_feature_lambda.shape[1] -np.sum(idx))
 
-def term_specific_rank(ont, coef_adjust, term_names, term_best_lambda, outf=None, print_limit=25):
-    '''
-    
-    :param ont: an Ontology object  
-    :param coef_adjust: adjusted regression coefficient, a dictionary that is the output from the {redistribute_gene_score} function
-    :param term_names: terms names of interest
-    :param term_best_lambda: a dictionary for terms' best lambda
-    :param outf: output dataframe path
-    :return: df_out: output dataframe
-    '''
-    # df_coef_adjust = pd.DataFrame.from_dict({'gene':coef_adjust[0], 'feature':coef_adjust[1], 'weight':coef_adjust[2], 'lambda':coef_adjust[3]})
-    out_records = []
-    for t in term_names:
-        tid = ont.terms.index(t)
-        lam = term_best_lambda[tid+len(ont.genes)]
-        coef_adjust_i = coef_adjust[lam]
-        df_coef_adjust = pd.DataFrame.from_dict(
-            {'gene': coef_adjust_i[0], 'feature': coef_adjust_i[1], 'weight': coef_adjust_i[2]})
+# def term_specific_rank(ont, coef_adjust, term_names, term_best_lambda, outf=None, print_limit=25):
+#     '''
+#
+#     :param ont: an Ontology object
+#     :param coef_adjust: adjusted regression coefficient, a dictionary that is the output from the {redistribute_gene_score} function
+#     :param term_names: terms names of interest
+#     :param term_best_lambda: a dictionary for terms' best lambda
+#     :param outf: output dataframe path
+#     :return: df_out: output dataframe
+#     '''
+#     # df_coef_adjust = pd.DataFrame.from_dict({'gene':coef_adjust[0], 'feature':coef_adjust[1], 'weight':coef_adjust[2], 'lambda':coef_adjust[3]})
+#     out_records = []
+#     for t in term_names:
+#         tid = ont.terms.index(t)
+#         lam = term_best_lambda[tid+len(ont.genes)]
+#         coef_adjust_i = coef_adjust[lam]
+#         df_coef_adjust = pd.DataFrame.from_dict(
+#             {'gene': coef_adjust_i[0], 'feature': coef_adjust_i[1], 'weight': coef_adjust_i[2]})
+#
+#         df_coef_sub = df_coef_adjust.loc[(df_coef_adjust['feature'] == tid+ len(ont.genes)), :]
+#         df_coef_sub.sort_values(by='weight', ascending=False, inplace=True)
+#         if df_coef_sub.shape[0] > print_limit:
+#             df_coef_sub = df_coef_sub.iloc[:print_limit, :]
+#         df_coef_sub['gene_name'] = np.array([ont.genes[x] for x in df_coef_sub['gene'].tolist()])
+#         df_coef_sub = df_coef_sub.round(3)
+#         df_coef_sub['weight'] = df_coef_sub['weight'].astype(str)
+#         out_records.append((t, '|'.join(df_coef_sub['gene_name'].tolist()), '|'.join(df_coef_sub['weight'].tolist())))
+#     df_out = pd.DataFrame.from_records(out_records)
+#     if outf!=None:
+#         df_out.to_csv(outf, sep='\t', index=False, header=False)
+#     return df_out
 
-        df_coef_sub = df_coef_adjust.loc[(df_coef_adjust['feature'] == tid+ len(ont.genes)), :]
-        df_coef_sub.sort_values(by='weight', ascending=False, inplace=True)
-        if df_coef_sub.shape[0] > print_limit:
-            df_coef_sub = df_coef_sub.iloc[:print_limit, :]
-        df_coef_sub['gene_name'] = np.array([ont.genes[x] for x in df_coef_sub['gene'].tolist()])
-        df_coef_sub = df_coef_sub.round(3)
-        df_coef_sub['weight'] = df_coef_sub['weight'].astype(str)
-        out_records.append((t, '|'.join(df_coef_sub['gene_name'].tolist()), '|'.join(df_coef_sub['weight'].tolist())))
-    df_out = pd.DataFrame.from_records(out_records)
-    if outf!=None:
-        df_out.to_csv(outf, sep='\t', index=False, header=False)
-    return df_out
 
-
-def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile):
+def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile,
+                                table, table_col_sys_name='System clixo/louvain name',
+                                outf=None, print_limit=25):
     '''
     to estimate number of samples mutated by each system
     :param ont: an Ontology object
@@ -171,15 +173,20 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
     # :return: df_out: output dataframe
     '''
     mat_system_count_inferred = np.zeros((len(term_names), tumor_profile.shape[1]))
-    mat_gene_in_system_count_inferred = np.zeros((len(ont.genes), len(term_names)))
+
+    df_terms = pd.read_table(table, sep='\t', index_col=table_col_sys_name)
+    df_terms_sub = df_terms.loc[term_names]
+    dict_gene_in_system_count_inferred = {t: {} for t in term_names}
+
     for i in range(len(tumor_profile.columns.tolist())):
         tumid = tumor_profile.columns.tolist()[i]
-        genes_mutated_in_sample = [g for g in tumor_profile[tumor_profile[tumid].notnull()].index.tolist() if g in ont.genes]
+        genes_mutated_in_sample = [g for g in tumor_profile[tumor_profile[tumid].notnull()].index.tolist() if
+                                   g in ont.genes]
         for j in range(len(term_names)):
             term_name = term_names[j]
-            term_id = ont.terms.index(term_name)
+            term_id = ont.terms.index(term_name)  # later may change this to the terms that are actually used
             lam = term_best_lambda[term_id + len(ont.genes)]
-            coef_adjust_i = coef_adjust[lam] # [n_genes, n_system] rescaled beta matrix
+            coef_adjust_i = coef_adjust[lam]  # [n_genes, n_system] rescaled beta matrix
             df_coef_adjust = pd.DataFrame.from_dict(
                 {'gene': coef_adjust_i[0], 'feature': coef_adjust_i[1], 'weight': coef_adjust_i[2]})
             df_coef_adjust['weight'] = df_coef_adjust['weight'].round(6)
@@ -188,20 +195,51 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
             genes_hit = [g for g in gene_ids_in_term if ont.genes[g] in genes_mutated_in_sample]
             multiplicon = 1
             for g in genes_hit:
+                if (not g in dict_gene_in_system_count_inferred[term_name]):
+                    dict_gene_in_system_count_inferred[term_name][g] = 0
                 df_coef_adjust_g = df_coef_adjust.loc[df_coef_adjust['gene'] == g]
-                if df_coef_adjust_g.shape[0] == 0: # mutated but doesn't contribute signal
+                if df_coef_adjust_g.shape[0] == 0:  # mutated but doesn't contribute signal
                     continue
                 elif df_coef_adjust_g.shape[0] == 1:
-                    mat_gene_in_system_count_inferred[g, j] += 1
+                    dict_gene_in_system_count_inferred[term_name][g] += 1
                     multiplicon = 0
                     break
                 else:
-                    p_gt = np.array(df_coef_adjust_g.loc[df_coef_adjust_g['feature'] == (len(ont.genes) + term_id), 'weight'])
+                    p_gt = np.array(
+                        df_coef_adjust_g.loc[df_coef_adjust_g['feature'] == (len(ont.genes) + term_id), 'weight'])
                     if len(p_gt) == 0:
                         continue
-                    mat_gene_in_system_count_inferred[g, j] += p_gt[0]
-                    multiplicon *= (1-p_gt[0])
+                    multiplicon *= (1 - p_gt[0])
+                    dict_gene_in_system_count_inferred[term_name][g] += p_gt[0]
             # print(multiplicon)
             mat_system_count_inferred[j, i] += 1 - multiplicon
 
-    return mat_system_count_inferred, mat_gene_in_system_count_inferred
+    # get summary statistics
+    system_mut_count_inferred = np.sum(mat_system_count_inferred, axis=1)
+    df_terms_sub['inferred_system_mutation_count'] = np.array(system_mut_count_inferred)
+
+    records_gene_in_system_count_inferred = []
+    for t in dict_gene_in_system_count_inferred.keys():
+        for g, v in dict_gene_in_system_count_inferred[t].iteritems():
+            records_gene_in_system_count_inferred.append((ont.genes[g], t, v))
+
+    df_gene_in_system_count_inferred = pd.DataFrame.from_records(records_gene_in_system_count_inferred,
+                                                                 columns=['gene', 'term', 'weight'])
+    all_adjusted_ranked_gene_names_for_term = {}
+    all_adjusted_ranked_gene_weights_for_term = {}
+
+    for t in term_names:
+        df_gene_in_system_count_inferred_sub = df_gene_in_system_count_inferred.loc[
+                                               df_gene_in_system_count_inferred['term'] == t, :]
+        df_gene_in_system_count_inferred_sub.sort_values(by='weight', ascending=False, inplace=True)
+        df_gene_in_system_count_inferred_sub = df_gene_in_system_count_inferred_sub.iloc[:print_limit, :]
+        all_adjusted_ranked_gene_names_for_term[t] = '|'.join(df_gene_in_system_count_inferred_sub['gene'].tolist())
+        all_adjusted_ranked_gene_weights_for_term[t] = '|'.join(
+            df_gene_in_system_count_inferred_sub['weight'].round(3).astype(str).tolist())
+    df_terms_sub['adjusted_ranked_gene_names'] = pd.Series(all_adjusted_ranked_gene_names_for_term)
+    df_terms_sub['adjusted_ranked_gene_weights'] = pd.Series(all_adjusted_ranked_gene_weights_for_term)
+
+    if outf != None:
+        df_terms_sub.to_csv(outf, sep='\t')
+
+    return df_terms_sub
