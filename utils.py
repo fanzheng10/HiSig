@@ -167,10 +167,11 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
     :param term_names: terms names of interest
     :param test_best_lambda: a dictionary for terms' best lambda
     :param tumor_profile: a [n_gene, n_patients] data frame (in-house ONP format)
-    :param signal #TODO: think about this
-    :return: df_out: output dataframe
+    # :param signal #TODO: think about this
+    # :return: df_out: output dataframe
     '''
     mat_system_count_inferred = np.zeros((len(term_names), tumor_profile.shape[1]))
+    mat_gene_in_system_count_inferred = np.zeros((len(ont.genes), len(term_names)))
     for i in range(len(tumor_profile.columns.tolist())):
         tumid = tumor_profile.columns.tolist()[i]
         genes_mutated_in_sample = [g for g in tumor_profile[tumor_profile[tumid].notnull()].index.tolist() if g in ont.genes]
@@ -191,13 +192,16 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
                 if df_coef_adjust_g.shape[0] == 0: # mutated but doesn't contribute signal
                     continue
                 elif df_coef_adjust_g.shape[0] == 1:
+                    mat_gene_in_system_count_inferred[g, j] += 1
                     multiplicon = 0
                     break
                 else:
                     p_gt = np.array(df_coef_adjust_g.loc[df_coef_adjust_g['feature'] == (len(ont.genes) + term_id), 'weight'])
                     if len(p_gt) == 0:
                         continue
+                    mat_gene_in_system_count_inferred[g, j] += p_gt[0]
                     multiplicon *= (1-p_gt[0])
-            print(multiplicon)
+            # print(multiplicon)
             mat_system_count_inferred[j, i] += 1 - multiplicon
-    return mat_system_count_inferred
+
+    return mat_system_count_inferred, mat_gene_in_system_count_inferred

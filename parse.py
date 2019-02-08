@@ -65,19 +65,23 @@ def parse_r_output(ont, rout, signal,
         df = df.merge(df2, how='left', left_on='System_name', right_index=True)
 
     df = df.round(6)
+
+    if outf !=None:
+        df.to_csv(outf, sep='\t')
     return df
 
-par = argparse.ArgumentParser()
-par.add_argument('--ont', required=True, help='the ontology file')
-par.add_argument('--rout', required=True, nargs = '+', help='the output of R; if there are multiple files concatenate them')
-par.add_argument('--signal', required=True, help='per gene mutation signal - the actual input of the Lasso regression (transformation of mutation);')
-par.add_argument('--signal2', help='another per gene signal to help interpretation; in this case can be the raw rount of mutations')
-par.add_argument('--out', required=True, help='output of this script')
-par.add_argument('--min_term_size', type=int, default=2, help='term size lower than this will not be considered; by default is 2, i.e. consider all terms')
-par.add_argument('--node_attr', help ='if not None, merge with a data frame with extra information')
-args = par.parse_args()
-
 if __name__ == "__main__":
+
+    par = argparse.ArgumentParser()
+    par.add_argument('--ont', required=True, help='the ontology file')
+    par.add_argument('--rout', required=True, nargs = '+', help='the output of R; if there are multiple files concatenate them')
+    par.add_argument('--signal', required=True, help='per gene mutation signal - the actual input of the Lasso regression (transformation of mutation);')
+    par.add_argument('--signal2', help='another per gene signal to help interpretation; in this case can be the raw rount of mutations')
+    par.add_argument('--out', required=True, help='output of this script')
+    par.add_argument('--min_term_size', type=int, default=2, help='term size lower than this will not be considered; by default is 2, i.e. consider all terms')
+    par.add_argument('--node_attr', help ='if not None, merge with a data frame with extra information')
+    args = par.parse_args()
+
     signal = np.loadtxt(args.signal)
     signal2 = None
     if args.signal2 != None:
