@@ -76,7 +76,7 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
     return df_out
 
 
-def redistribute_gene_score(coef, mat, signal, exponential=False, with_signal=False):
+def redistribute_gene_score(coef, mat, signal, exponential=False):
     '''
     calculate the redistributed gene score after the signal on genes was redistributed by regression
     :param coef: path to input file, a data frame, with dims [n_features, n_lambdas]
@@ -99,8 +99,6 @@ def redistribute_gene_score(coef, mat, signal, exponential=False, with_signal=Fa
         if np.sum(idx) == 0:
             continue
         out = mat_gene_feature.data[idx] / np.asarray(scale[mat_gene_feature.row[idx]].T)[0]
-        # if with_signal:
-        #     out = out * vsignal[mat_gene_feature.row[idx]]
         if exponential:
             out = out * np.power(vsignal[mat_gene_feature.row[idx]], out-1)
             # mat_gene_feature_2 = coo_matrix((out, (mat_gene_feature.row[idx], mat_gene_feature.col[idx])))
@@ -110,7 +108,6 @@ def redistribute_gene_score(coef, mat, signal, exponential=False, with_signal=Fa
             #     continue
             # out2 = mat_gene_feature_2.data[idx2] / np.asarray(scale_2[mat_gene_feature_2.row[idx2]].T)[0]
             outputs[i] = (mat_gene_feature.row[idx], mat_gene_feature.col[idx], out)
-            # outputs[i] = (mat_gene_feature_2.row[idx2], mat_gene_feature_2.col[idx2], out)
         else:
             outputs[i] = (mat_gene_feature.row[idx], mat_gene_feature.col[idx], out)
 
