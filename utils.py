@@ -76,7 +76,7 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
     return df_out
 
 
-def redistribute_gene_score(coef, mat, signal, exponential=False):
+def redistribute_gene_score(coef, mat, signal, exponential=False, with_signal=False):
     '''
     calculate the redistributed gene score after the signal on genes was redistributed by regression
     :param coef: path to input file, a data frame, with dims [n_features, n_lambdas]
@@ -98,16 +98,19 @@ def redistribute_gene_score(coef, mat, signal, exponential=False):
         idx = (mat_gene_feature.data > 0) & (vsignal[mat_gene_feature.row] >0)
         if np.sum(idx) == 0:
             continue
-        # out = mat_gene_feature.data[idx] * vsignal[mat_gene_feature.row[idx]] / scale[0]
-        out = mat_gene_feature.data[idx] / np.asarray(scale[mat_gene_feature.row[idx]].T)[0] # note that I decided to output the rescaled beta, not yet multiply to signal
+        out = mat_gene_feature.data[idx] / np.asarray(scale[mat_gene_feature.row[idx]].T)[0]
+        # if with_signal:
+        #     out = out * vsignal[mat_gene_feature.row[idx]]
         if exponential:
-            mat_gene_feature_2 = coo_matrix((np.exp(out), (mat_gene_feature.row[idx], mat_gene_feature.col[idx])))
-            scale_2 = np.sum(mat_gene_feature_2, axis=1)
-            idx2 = (mat_gene_feature_2.data > 0) & (vsignal[mat_gene_feature_2.row] >0)
-            if np.sum(idx2) == 0:
-                continue
-            out2 = mat_gene_feature_2.data[idx2] / np.asarray(scale_2[mat_gene_feature_2.row[idx2]].T)[0]
-            outputs[i] = (mat_gene_feature_2.row[idx2], mat_gene_feature_2.col[idx2], out2)
+            out = out * np.power(vsignal[mat_gene_feature.row[idx]], out-1)
+            # mat_gene_feature_2 = coo_matrix((out, (mat_gene_feature.row[idx], mat_gene_feature.col[idx])))
+            # scale_2 = np.sum(mat_gene_feature_2, axis=1)
+            # idx2 = (mat_gene_feature_2.data > 0) & (vsignal[mat_gene_feature_2.row] >0)
+            # if np.sum(idx2) == 0:
+            #     continue
+            # out2 = mat_gene_feature_2.data[idx2] / np.asarray(scale_2[mat_gene_feature_2.row[idx2]].T)[0]
+            outputs[i] = (mat_gene_feature.row[idx], mat_gene_feature.col[idx], out)
+            # outputs[i] = (mat_gene_feature_2.row[idx2], mat_gene_feature_2.col[idx2], out)
         else:
             outputs[i] = (mat_gene_feature.row[idx], mat_gene_feature.col[idx], out)
 
@@ -126,39 +129,6 @@ def feature_best_lambda(coef):
     mat_feature_argmax = np.argmax(mat_feature_lambda_scaled, axis=1)
     return idy, mat_feature_argmax[idy] + (mat_feature_lambda.shape[1] -np.sum(idx))
 
-# def term_specific_rank(ont, coef_adjust, term_names, term_best_lambda, outf=None, print_limit=25):
-#     '''
-#
-#     :param ont: an Ontology object
-#     :param coef_adjust: adjusted regression coefficient, a dictionary that is the output from the {redistribute_gene_score} function
-#     :param term_names: terms names of interest
-#     :param term_best_lambda: a dictionary for terms' best lambda
-#     :param outf: output dataframe path
-#     :return: df_out: output dataframe
-#     '''
-#     # df_coef_adjust = pd.DataFrame.from_dict({'gene':coef_adjust[0], 'feature':coef_adjust[1], 'weight':coef_adjust[2], 'lambda':coef_adjust[3]})
-#     out_records = []
-#     for t in term_names:
-#         tid = ont.terms.index(t)
-#         lam = term_best_lambda[tid+len(ont.genes)]
-#         coef_adjust_i = coef_adjust[lam]
-#         df_coef_adjust = pd.DataFrame.from_dict(
-#             {'gene': coef_adjust_i[0], 'feature': coef_adjust_i[1], 'weight': coef_adjust_i[2]})
-#
-#         df_coef_sub = df_coef_adjust.loc[(df_coef_adjust['feature'] == tid+ len(ont.genes)), :]
-#         df_coef_sub.sort_values(by='weight', ascending=False, inplace=True)
-#         if df_coef_sub.shape[0] > print_limit:
-#             df_coef_sub = df_coef_sub.iloc[:print_limit, :]
-#         df_coef_sub['gene_name'] = np.array([ont.genes[x] for x in df_coef_sub['gene'].tolist()])
-#         df_coef_sub = df_coef_sub.round(3)
-#         df_coef_sub['weight'] = df_coef_sub['weight'].astype(str)
-#         out_records.append((t, '|'.join(df_coef_sub['gene_name'].tolist()), '|'.join(df_coef_sub['weight'].tolist())))
-#     df_out = pd.DataFrame.from_records(out_records)
-#     if outf!=None:
-#         df_out.to_csv(outf, sep='\t', index=False, header=False)
-#     return df_out
-
-
 def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile,
                                 table, table_col_sys_name='System clixo/louvain name',
                                 outf=None, print_limit=25):
@@ -174,7 +144,8 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
     '''
     mat_system_count_inferred = np.zeros((len(term_names), tumor_profile.shape[1]))
 
-    df_terms = pd.read_table(table, sep='\t', index_col=table_col_sys_name)
+    df_terms = pd.read_table(table, sep='\t', index_col=0)
+    df_terms.set_index(table_col_sys_name, drop=True, inplace=True)
     df_terms_sub = df_terms.loc[term_names]
     dict_gene_in_system_count_inferred = {t: {} for t in term_names}
 
@@ -209,6 +180,7 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
                         df_coef_adjust_g.loc[df_coef_adjust_g['feature'] == (len(ont.genes) + term_id), 'weight'])
                     if len(p_gt) == 0:
                         continue
+                    p_gt[0] = min(1.0, p_gt[0])
                     multiplicon *= (1 - p_gt[0])
                     dict_gene_in_system_count_inferred[term_name][g] += p_gt[0]
             # print(multiplicon)
@@ -238,7 +210,7 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
             df_gene_in_system_count_inferred_sub['weight'].round(3).astype(str).tolist())
     df_terms_sub['adjusted_ranked_gene_names'] = pd.Series(all_adjusted_ranked_gene_names_for_term)
     df_terms_sub['adjusted_ranked_gene_weights'] = pd.Series(all_adjusted_ranked_gene_weights_for_term)
-
+    df_terms_sub = df_terms_sub.round(3)
     if outf != None:
         df_terms_sub.to_csv(outf, sep='\t')
 
