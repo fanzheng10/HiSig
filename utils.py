@@ -126,9 +126,7 @@ def feature_best_lambda(coef):
     mat_feature_argmax = np.argmax(mat_feature_lambda_scaled, axis=1)
     return idy, mat_feature_argmax[idy] + (mat_feature_lambda.shape[1] -np.sum(idx))
 
-def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile,
-                                table, table_col_sys_name='System clixo/louvain name',
-                                outf=None, print_limit=25):
+def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile, outf=None, print_limit=25):
     '''
     to estimate number of samples mutated by each system
     :param ont: an Ontology object
@@ -141,9 +139,7 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
     '''
     mat_system_count_inferred = np.zeros((len(term_names), tumor_profile.shape[1]))
 
-    df_terms = pd.read_table(table, sep='\t', index_col=0)
-    df_terms.set_index(table_col_sys_name, drop=True, inplace=True)
-    df_terms_sub = df_terms.loc[term_names]
+    df_terms_sub = pd.DataFrame(index=term_names)
     dict_gene_in_system_count_inferred = {t: {} for t in term_names}
 
     for i in range(len(tumor_profile.columns.tolist())):
@@ -153,6 +149,9 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
         for j in range(len(term_names)):
             term_name = term_names[j]
             term_id = ont.terms.index(term_name)  # later may change this to the terms that are actually used
+            # lam = term_best_lambda[term_id + len(ont.genes)]
+            if not term_id + len(ont.genes) in term_best_lambda:
+                continue
             lam = term_best_lambda[term_id + len(ont.genes)]
             coef_adjust_i = coef_adjust[lam]  # [n_genes, n_system] rescaled beta matrix
             df_coef_adjust = pd.DataFrame.from_dict(
