@@ -113,10 +113,11 @@ def redistribute_gene_score(coef, mat, signal, exponential=False):
 
     return outputs
 
+
 def feature_best_lambda(coef):
     '''
     for each feature, get the lambda when it achieves the highest importance
-    :param coef: a [n_feature, n_lambda] matrix
+    :param coef: a file of [n_feature, n_lambda] matrix
     :return: two vector; feature index and the best lambda of these feature. Features that are never positive are omitted
     '''
     mat_feature_lambda = np.array(pd.read_table(coef, index_col=0))
@@ -125,6 +126,7 @@ def feature_best_lambda(coef):
     idy = np.where(np.sum(mat_feature_lambda_scaled, axis=1) != 0)[0]
     mat_feature_argmax = np.argmax(mat_feature_lambda_scaled, axis=1)
     return idy, mat_feature_argmax[idy] + (mat_feature_lambda.shape[1] -np.sum(idx))
+
 
 def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile, outf=None, print_limit=25):
     '''
@@ -211,3 +213,32 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
         df_terms_sub.to_csv(outf, sep='\t')
 
     return df_terms_sub
+
+
+def rerank_genes(coef, conn, genes):
+    '''
+    
+    :param coef: a file of [n_genes, n_lambda] matrix
+    :param conn: a file of [n_genes, n_features] sparse matrix
+    :param genes: a list of gene names
+    :return: rank_gl_alllambda: list of lists, [n_lambda, n_genes]
+    '''
+    mat_feature_lambda = np.array(pd.read_table(coef, index_col=0))
+    coo_gene_feature = np.loadtxt(conn).astype(int)
+
+    predictions = []
+    for i in range(mat_feature_lambda.shape[1]):
+        mat_gene_feature = coo_matrix(
+            (mat_feature_lambda[:, i][coo_gene_feature[:, 1]], (coo_gene_feature[:, 0], coo_gene_feature[:, 1])))
+        # prediction is simply row sum
+        if np.sum(mat_gene_feature.data) == 0:
+            continue
+        prediction = np.sum(mat_gene_feature, axis=1)
+        predictions.append(prediction)
+
+    rank_gl_alllambda = []
+    for pred in predictions[::-1]:
+        rank_gl = np.array([genes[gi] for gi in np.argsort(np.asarray(pred).ravel())[::-1]])
+        rank_gl_alllambda.append(rank_gl)
+
+    return rank_gl_alllambda
