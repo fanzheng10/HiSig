@@ -2,7 +2,7 @@ import argparse
 import pandas as pd
 import numpy as np
 from ddot import *
-from statsmodels import *
+from statsmodels.stats.multitest import *
 from utils import *
 
 def parse_r_output(ont, rout, signal,
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     signal = np.loadtxt(args.signal)
     signal2 = None
     if args.signal2 != None:
-        signal2 = np.load(args.signal2).astype(int)
+        signal2 = np.loadtxt(args.signal2).astype(int)
 
-    parse_r_output(args.ont, args.rout, args.signal,
-                   signal2=args.signal2, outf=args.out, min_term_size=args.min_term_size, node_attr=args.node_attr)
+    parse_r_output(args.ont, args.rout, signal,
+                   signal2=signal2, outf=args.out, min_term_size=args.min_term_size, node_attr=args.node_attr)
