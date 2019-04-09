@@ -20,9 +20,12 @@ def parse_r_output(ont, rout, signal,
     '''
     ont = Ontology.from_table(ont, clixo_format=True, is_mapping=lambda x: x[2] == 'gene')
     ont.propagate('forward', inplace=True)
+    if len(ont.get_roots()) > 1:
+        ont.add_root('ROOT', inplace=True)
     ngenes = len(ont.genes)
 
     assert ngenes == len(signal), 'error in [signal]: incorrect number of genes'
+    # if signal2 != None:
     assert ngenes == len(signal2), 'error in [signal2]: incorrect number of genes'
     assert isinstance(rout, list), 'error: [rout] needs to be a list'
 

@@ -11,7 +11,7 @@ def infer_stats_for_systems(ont, conn, coef_file, term_name_list, signal, onp, o
 
     df_onp = pd.read_table(onp, sep='\t', index_col=0)
     term_names = [l.strip() for l in open(term_name_list).readlines()]
-    system_mut_count_pertumor = estimate_nsamples_per_term(ont, coef_adjust, term_names, dict_lam, df_onp, outf=outf)
+    system_mut_count_pertumor = estimate_nsamples_per_term(ont, coef_adjust, term_names, dict_lam, df_onp, outf=outf, save_per_patient=True)
 
     return system_mut_count_pertumor
 

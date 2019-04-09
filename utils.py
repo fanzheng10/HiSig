@@ -128,7 +128,7 @@ def feature_best_lambda(coef):
     return idy, mat_feature_argmax[idy] + (mat_feature_lambda.shape[1] -np.sum(idx))
 
 
-def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile, outf=None, print_limit=25):
+def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile, outf=None, save_per_patient=False, print_limit=25):
     '''
     to estimate number of samples mutated by each system
     :param ont: an Ontology object
@@ -188,6 +188,9 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
     system_mut_count_inferred = np.sum(mat_system_count_inferred, axis=1)
     df_terms_sub['inferred_system_mutation_count'] = np.array(system_mut_count_inferred)
 
+    if save_per_patient:
+        np.save(outf + '.npy', mat_system_count_inferred)
+
     records_gene_in_system_count_inferred = []
     for t in dict_gene_in_system_count_inferred.keys():
         for g, v in dict_gene_in_system_count_inferred[t].iteritems():
@@ -214,31 +217,3 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
 
     return df_terms_sub
 
-
-def rerank_genes(coef, conn, genes):
-    '''
-    
-    :param coef: a file of [n_genes, n_lambda] matrix
-    :param conn: a file of [n_genes, n_features] sparse matrix
-    :param genes: a list of gene names
-    :return: rank_gl_alllambda: list of lists, [n_lambda, n_genes]
-    '''
-    mat_feature_lambda = np.array(pd.read_table(coef, index_col=0))
-    coo_gene_feature = np.loadtxt(conn).astype(int)
-
-    predictions = []
-    for i in range(mat_feature_lambda.shape[1]):
-        mat_gene_feature = coo_matrix(
-            (mat_feature_lambda[:, i][coo_gene_feature[:, 1]], (coo_gene_feature[:, 0], coo_gene_feature[:, 1])))
-        # prediction is simply row sum
-        if np.sum(mat_gene_feature.data) == 0:
-            continue
-        prediction = np.sum(mat_gene_feature, axis=1)
-        predictions.append(prediction)
-
-    rank_gl_alllambda = []
-    for pred in predictions[::-1]:
-        rank_gl = np.array([genes[gi] for gi in np.argsort(np.asarray(pred).ravel())[::-1]])
-        rank_gl_alllambda.append(rank_gl)
-
-    return rank_gl_alllambda
