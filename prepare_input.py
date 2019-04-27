@@ -22,7 +22,7 @@ def prepare_input(ont, sig, outf_conn, outf_sig, file_exist=False, scut=2):
                 terms = ont.gene_2_term[g]
                 ofh.write('{}\t{}\n'.format(i, i))
                 for t in terms:
-                    if ont.term_sizes[t] < scut:
+                    if ont.term_sizes[t] < scut: # TODO: I think if the term size was not pruned in the input, the index here will be wrong
                         continue
                     ofh.write('{}\t{}\n'.format(i, t+len(ont.genes)))
 

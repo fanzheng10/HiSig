@@ -172,7 +172,7 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
                 elif df_coef_adjust_g.shape[0] == 1:
                     dict_gene_in_system_count_inferred[term_name][g] += 1
                     multiplicon = 0
-                    break
+                    # break
                 else:
                     p_gt = np.array(
                         df_coef_adjust_g.loc[df_coef_adjust_g['feature'] == (len(ont.genes) + term_id), 'weight'])

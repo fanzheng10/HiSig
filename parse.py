@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from ddot import *
 from statsmodels.stats.multitest import *
-from utils import *
+from HiSig import *
 
 def parse_r_output(ont, rout, signal,
                    signal2=None, outf=None, min_term_size=2, node_attr=None):
