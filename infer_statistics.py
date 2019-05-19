@@ -27,7 +27,7 @@ if __name__ == "__main__":
     args = par.parse_args()
 
     ont = Ontology.from_table(args.ont, clixo_format=True, is_mapping = lambda x:x[2]=='gene')
-    if len(ont.get_roots())==1:
+    if len(ont.get_roots())>1:
         ont.add_root('ROOT', inplace=True)
     ont.propagate('forward', inplace=True) # important!
     infer_stats_for_systems(ont, args.conn, args.coef, args.signal, args.onp, outf = args.outf)

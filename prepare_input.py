@@ -1,7 +1,7 @@
 import argparse
 from ddot import *
 
-def prepare_input(ont, sig, outf_conn, outf_sig, file_exist=False, scut=2):
+def prepare_input(ont, sig, outf_conn, outf_sig, file_exist=False):
     '''
     
     :param ont: 
@@ -22,14 +22,14 @@ def prepare_input(ont, sig, outf_conn, outf_sig, file_exist=False, scut=2):
                 terms = ont.gene_2_term[g]
                 ofh.write('{}\t{}\n'.format(i, i))
                 for t in terms:
-                    if ont.term_sizes[t] < scut: # TODO: I think if the term size was not pruned in the input, the index here will be wrong
-                        continue
+                    # if ont.term_sizes[t] < scut: # TODO: I think if the term size was not pruned in the input, the index here will be wrong
+                    #     continue
                     ofh.write('{}\t{}\n'.format(i, t+len(ont.genes)))
 
         with open('terms.txt', 'w') as fh:
             for i in range(len(ont.terms)):
-                if ont.term_sizes[i] < scut:
-                    continue
+                # if ont.term_sizes[i] < scut:
+                #     continue
                 fh.write(ont.terms[i] +'\n')
 
     signal = {}
@@ -50,9 +50,9 @@ if __name__ == "__main__":
     par.add_argument('--ont', required=True, help = 'an ontology file')
     par.add_argument('--sig', required=True, help = 'a text file for the signal on gene (leaf nodes)')
     par.add_argument('--out', required=True, help = 'output file')
-    par.add_argument('--scut', default=2, type=int, help='cutoff; systems smaller than this will be removed')
+    # par.add_argument('--scut', default=2, type=int, help='cutoff; systems smaller than this will be removed')
     par.add_argument('--exist', action='store_true', help='if true, skip generating sparse matrix (redundant)')
     args = par.parse_args()
 
 
-    prepare_input(args.ont, args.sig, 'ont_conn.txt', args.out, file_exist=args.exist, scut=args.scut)
+    prepare_input(args.ont, args.sig, 'ont_conn.txt', args.out, file_exist=args.exist)
