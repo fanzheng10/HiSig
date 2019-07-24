@@ -10,8 +10,8 @@ def prepare_input(ont, sig, outf_conn, outf_sig, file_exist=False):
     :param scut: 
     :return: 
     '''
+    ont = Ontology.from_table(ont, clixo_format=True, is_mapping=lambda x: x[2] == 'gene')
     if not file_exist:
-        ont = Ontology.from_table(ont, clixo_format=True, is_mapping = lambda x:x[2]=='gene')
         ont.propagate('forward', inplace=True)
         if len(ont.get_roots())> 1:
             ont.add_root('ROOT', inplace=True)
@@ -50,7 +50,6 @@ if __name__ == "__main__":
     par.add_argument('--ont', required=True, help = 'an ontology file')
     par.add_argument('--sig', required=True, help = 'a text file for the signal on gene (leaf nodes)')
     par.add_argument('--out', required=True, help = 'output file')
-    # par.add_argument('--scut', default=2, type=int, help='cutoff; systems smaller than this will be removed')
     par.add_argument('--exist', action='store_true', help='if true, skip generating sparse matrix (redundant)')
     args = par.parse_args()
 

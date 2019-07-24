@@ -25,8 +25,8 @@ def parse_r_output(ont, rout, signal,
     ngenes = len(ont.genes)
 
     assert ngenes == len(signal), 'error in [signal]: incorrect number of genes'
-    # if signal2 != None:
-    assert ngenes == len(signal2), 'error in [signal2]: incorrect number of genes'
+    if signal2 != None:
+        assert ngenes == len(signal2), 'error in [signal2]: incorrect number of genes'
     assert isinstance(rout, list), 'error: [rout] needs to be a list'
 
     rout_batches = []

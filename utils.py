@@ -44,7 +44,8 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
 
             g_signal = [signal[gi] for gi in g_in_t_ind_sort]
             g_rank = [signal_sort[gi] for gi in g_in_t_ind_sort]
-            g_signal_raw = [signal2[gi] for gi in g_in_t_ind_sort] # TODO: right now if not having this vector, the program will fail. Will make this optional
+            if signal2 != None:
+                g_signal_raw = [signal2[gi] for gi in g_in_t_ind_sort] # TODO: right now if not having this vector, the program will fail. Will make this optional
 
             if len(g_in_t) > print_limit:
                 outlist = [i+1, t, '{} genes including: {}'.format(len(g_in_t), ','.join(g_in_t[:print_limit])), '{:.6f}'.format(coef[i])]
@@ -52,9 +53,13 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
                     outlist.extend(['{:.4f}'.format(pvals[i]), '{:.4f}'.format(qvals[i-ngenes])])
                 else:
                     outlist.extend(['', ''])
-                outlist.extend(['|'.join(map(str, g_signal[:print_limit])),
+                if signal2 != None:
+                    outlist.extend(['|'.join(map(str, g_signal[:print_limit])),
                                 '|'.join(map(str, g_rank[:print_limit])),
                                 '|'.join(map(str, g_signal_raw[:print_limit]))])
+                else:
+                    outlist.extend(['|'.join(map(str, g_signal[:print_limit])),
+                                    '|'.join(map(str, g_rank[:print_limit]))])
             else:
                 outlist = [i+1, t, ','.join(g_in_t), '{:.6f}'.format(coef[i])]
                 if (len(pvals) > 0) and (len(qvals) > 0):
@@ -62,16 +67,26 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
                 else:
                     outlist.extend(['', ''])
                 # outstr.append([i, coef[i], ','.join(g_in_t), ';'.join(map(str, signal_in_t))])
-                outlist.extend(['|'.join(map(str, g_signal)),
+                if signal2 != None:
+                    outlist.extend(['|'.join(map(str, g_signal)),
                                 '|'.join(map(str, g_rank)),
                                 '|'.join(map(str, g_signal_raw))])
+                else:
+                    outlist.extend(['|'.join(map(str, g_signal[:print_limit])),
+                                    '|'.join(map(str, g_rank[:print_limit]))])
             outstr.append(outlist)
         elif no_gene == False:
-            outlist = [i+1, ont.genes[i], '{:.6f}'.format(coef[i]), '', '', signal[i], signal_sort[i], signal2[i]]
+            if signal2 != None:
+                outlist = [i+1, ont.genes[i], '{:.6f}'.format(coef[i]), '', '', signal[i], signal_sort[i], signal2[i]]
+            else:
+                outlist = [i + 1, ont.genes[i], '{:.6f}'.format(coef[i]), '', '', signal[i], signal_sort[i]]
             outstr.append(outlist) # for genes, p values are quite meaningless # TODO: recosnider this decision
-
-    colnames = ['System_index', 'System_name', 'Genes', 'Selection_pressure', 'p', 'q',
+    if signal2 !=None:
+        colnames = ['System_index', 'System_name', 'Genes', 'Selection_pressure', 'p', 'q',
                     'Model_input', 'Rank_of_model_input', signal2_name]
+    else:
+        colnames = ['System_index', 'System_name', 'Genes', 'Selection_pressure', 'p', 'q',
+                    'Model_input', 'Rank_of_model_input']
     df_out = pd.DataFrame.from_records(outstr, columns=colnames)
     return df_out
 
