@@ -5,7 +5,7 @@ Given a hierarhical model of inter-connected systems, HiSig is a program that se
 # Dependencies
 * The DDOT (`Data-driven Ontology Toolkit`) package (url), ensure all the Python dependencies specified there.   (**TODO: make it unnecessary to install DDOT**)
 * A working installation of R. We have tested on R 3.4.  Require libraries `glmnet`, `Matrix`, and `parallel`
-* Python packages `statsmodels`
+* Python package `statsmodels`
 * for efficient permutation test, need multiple CPU cores.
 
 
@@ -14,7 +14,8 @@ Given a hierarhical model of inter-connected systems, HiSig is a program that se
 The Jupyter notebook `examples/demo.ipynb` illustrates the usage of the package step by step. 
 
 ## prepare the input
-One should start with a file describing a hierarchical model, which is a 3-column text file  defined in the `DDOT` package (see `sample.ont`),  and another 2-column text file with signals on leaves nodes (see `sample_genescore.tsv`). In our use case, leaves nodes are interpreted as genes and the signals on leaves are interpreted as the (transformed) number of observed mutations of each gene. 
+One should start with a file describing a hierarchical model, which is a 3-column text file  defined in the `DDOT` package (see `sample.ont`),  and another 2-column text file with signals on leaves nodes (see `sample_genescore.tsv`). In our use case, leaves nodes are interpreted as genes and the signals on leaves are interpreted as the (transformed) number of observed mutations of each gene.   
+**TODO: sample_genescore is not here yet**
 
 Example usage:
 `python /cellar/users/f6zheng/Code/HiSig/prepare_input.py --ont sample.ont --sig sample_genescore.tsv --out sample_signal.txt`
@@ -42,5 +43,3 @@ Use `parse.py` to parse the results. Example of usage:
 `python /cellar/users/f6zheng/Code/HiSig/parse.py --ont sample.ont --rout sample_ms_impact.impact-w-rand.tsv --signal sample_signals.txt --out sample_ms_impact_summary.tsv`
 
 The final result is `sample_ms_impact_summary.tsv`, in which each row is a gene set (system); gene sets are ordered by their q-value. The columns `Mutation model input` and `Rank of model` represent genes' signals in the input and their ranks among all genes, to help understand the results.   
-
-*TODO: confirm no bug without --signal2*
