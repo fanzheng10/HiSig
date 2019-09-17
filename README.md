@@ -18,7 +18,7 @@ One should start with a file describing a hierarchical model, which is a 3-colum
 **TODO: sample_genescore is not here yet**
 
 Example usage:
-`python /cellar/users/f6zheng/Code/HiSig/prepare_input.py --ont sample.ont --sig sample_genescore.tsv --out sample_signal.txt`
+`python prepare_input.py --ont sample.ont --sig sample_genescore.tsv --out sample_signal.txt`
 
 
 After running `prepare_input.py`, one should get two files: (1) a sparse matrix defining gene-to-system membership (in text format, see `sample_conn.txt`); (2) a text file with real values (see `sample_signals.txt`), genes in the input file (`sample_genescore.tsv`) but not in the hierarchy (`sample.ont`) will be omitted. 
@@ -40,6 +40,6 @@ This step generates two outputs: `sample_ms_impact.coef` and `sample_ms_impact.i
 
 Use `parse.py` to parse the results. Example of usage:
 
-`python /cellar/users/f6zheng/Code/HiSig/parse.py --ont sample.ont --rout sample_ms_impact.impact-w-rand.tsv --signal sample_signals.txt --out sample_ms_impact_summary.tsv`
+`python parse.py --ont sample.ont --rout sample_ms_impact.impact-w-rand.tsv --signal sample_signals.txt --out sample_ms_impact_summary.tsv`
 
-The final result is `sample_ms_impact_summary.tsv`, in which each row is a gene set (system); gene sets are ordered by their q-value. The columns `Mutation model input` and `Rank of model` represent genes' signals in the input and their ranks among all genes, to help understand the results.   
+The final result is `sample_ms_impact_summary.tsv`, in which each row is a gene set (system); gene sets are ordered by their q-value (Benjamini-Hochberg FDR). The columns `Mutation model input` and `Rank of model` represent genes' signals in the input and their ranks among all genes, to help understand the results.   

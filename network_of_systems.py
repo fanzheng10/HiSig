@@ -1,5 +1,7 @@
 import argparse
 import pandas as pd
+import sys
+sys.path.append('/cellar/users/f6zheng/tools/lib/python2.7/site-packages')
 from ddot import *
 import seaborn as sns
 import networkx as nx
@@ -52,19 +54,20 @@ if __name__ == "__main__":
         ont.add_root('ROOT', inplace=True)
 
     df_use = pd.read_table(args.input, sep='\t')
-    df_node = pd.read_table(args.node_attr, sep='\t')
-    # remove the redundant columns
-    df_use = df_use[[c for c in df_use.columns.tolist() if (c==args.join) or (not c in df_node.columns.tolist())]]
-
     assert args.join in df_use.columns.tolist()
-    assert args.join in df_node.columns.tolist()
+
+    if args.node_attr != None:
+        df_node = pd.read_table(args.node_attr, sep='\t')
+    # remove the redundant columns
+        df_use = df_use[[c for c in df_use.columns.tolist() if (c==args.join) or (not c in df_node.columns.tolist())]]
+        assert args.join in df_node.columns.tolist()
 
     terms = df_use[args.join].tolist()
 
     # add auxiliary nodes
     ont_conn = ont.connected(ont.terms)
     records = []
-    ind_sel_terms = np.array([ont.terms.index(t) for t in terms])
+    ind_sel_terms = np.array([ont.terms.index(t) for t in terms if t in ont.terms])
     for ti in range(len(ont.terms)):
         x = np.sum(ont_conn[ind_sel_terms, ti])
         if (x> 1) and (not ont.terms[ti] in terms):
@@ -86,58 +89,59 @@ if __name__ == "__main__":
     df_use = pd.concat([df_use, df_ancestor])
     df_use.reset_index(inplace=True, drop=True)
 
-    df_use = df_use.merge(df_node, how='left', left_on =args.join,right_on=args.join)
+    if args.node_attr != None:
+        df_use = df_use.merge(df_node, how='left', left_on =args.join,right_on=args.join)
 
     # add enhanced graph (for RBVI)
     df_combined_eh = df_use.copy()
     cols_q = [c for c in df_use.columns.tolist() if c.endswith('-q')]
     df_combined_eh['logSize'] = np.log2(df_combined_eh['Size'])
 
-    color_hex = sns.color_palette("Set1", len(cols_q)).as_hex()
+    # color_hex = sns.color_palette("Set1", len(cols_q)).as_hex()
+    #
+    # for c in cols_q:
+    #     ct = c.replace('-q', '')
+    #     df_combined_eh[ct.upper() + '_graphvalue'] = 0
+    #
+    # dict_chart_q, dict_chart_mut, dict_chart_mutcnv = {}, {}, {}
 
-    for c in cols_q:
-        ct = c.replace('-q', '')
-        df_combined_eh[ct.upper() + '_graphvalue'] = 0
-
-    dict_chart_q, dict_chart_mut, dict_chart_mutcnv = {}, {}, {}
-
-    for i, row in df_combined_eh.iterrows():
-        attr_list = []
-        color_list = []
-        label_list_q = []
-        label_list_mut = []
-        # label_list_mutcnv = []
-        sig = 0
-        for k in range(len(cols_q)):
-            if row[cols_q[k]] > 0:
-                ct = cols_q[k].replace('-q', '')
-                df_combined_eh.loc[i, ct.upper() + '_graphvalue'] = 1
-                attr_list.append(ct.upper() + '_graphvalue')
-                color_list.append(color_hex[k])
-                label_list_q.append(ct + ' ' + str(row[cols_q[k]]))  # why not show frequencies as label
-                label_list_mut.append(ct + ' ' + str(row[ct + '_mut']))  # why not show frequencies as label
-                # label_list_mutcnv.append(ct + '_' + str(row[ct.lower() + '_mutcnv']))  # why not show frequencies as label
-                sig = 1
-
-        chart_str_q = 'piechart: attributelist="{}" colorlist="{}" labellist="{}" showlabels=True'.format(
-            ','.join(attr_list),
-            ','.join(color_list),
-            ','.join(label_list_q))
-        chart_str_mut = 'piechart: attributelist="{}" colorlist="{}" labellist="{}" showlabels=True'.format(
-            ','.join(attr_list),
-            ','.join(color_list),
-            ','.join(label_list_mut))
-        # chart_str_mutcnv = 'piechart: attributelist="{}" colorlist="{}" labellist="{}" showlabels=True'.format(
-        #     ','.join(attr_list),
-        #     ','.join(color_list),
-        #     ','.join(label_list_mutcnv))
-        if sig:
-            dict_chart_q[i] = chart_str_q
-            dict_chart_mut[i] = chart_str_mut
-            # dict_chart_mutcnv[i] = chart_str_mutcnv
-
-    df_combined_eh['Chart q'] = pd.Series(dict_chart_q)
-    df_combined_eh['Chart mut'] = pd.Series(dict_chart_mut)
+    # for i, row in df_combined_eh.iterrows():
+    #     attr_list = []
+    #     color_list = []
+    #     label_list_q = []
+    #     label_list_mut = []
+    #     # label_list_mutcnv = []
+    #     sig = 0
+    #     for k in range(len(cols_q)):
+    #         if row[cols_q[k]] > 0:
+    #             ct = cols_q[k].replace('-q', '')
+    #             df_combined_eh.loc[i, ct.upper() + '_graphvalue'] = 1
+    #             attr_list.append(ct.upper() + '_graphvalue')
+    #             color_list.append(color_hex[k])
+    #             label_list_q.append(ct + ' ' + str(row[cols_q[k]]))  # why not show frequencies as label
+    #             label_list_mut.append(ct + ' ' + str(row[ct + '_mut']))  # why not show frequencies as label
+    #             # label_list_mutcnv.append(ct + '_' + str(row[ct.lower() + '_mutcnv']))  # why not show frequencies as label
+    #             sig = 1
+    #
+    #     chart_str_q = 'piechart: attributelist="{}" colorlist="{}" labellist="{}" showlabels=True'.format(
+    #         ','.join(attr_list),
+    #         ','.join(color_list),
+    #         ','.join(label_list_q))
+    #     chart_str_mut = 'piechart: attributelist="{}" colorlist="{}" labellist="{}" showlabels=True'.format(
+    #         ','.join(attr_list),
+    #         ','.join(color_list),
+    #         ','.join(label_list_mut))
+    #     # chart_str_mutcnv = 'piechart: attributelist="{}" colorlist="{}" labellist="{}" showlabels=True'.format(
+    #     #     ','.join(attr_list),
+    #     #     ','.join(color_list),
+    #     #     ','.join(label_list_mutcnv))
+    #     if sig:
+    #         dict_chart_q[i] = chart_str_q
+    #         dict_chart_mut[i] = chart_str_mut
+    #         # dict_chart_mutcnv[i] = chart_str_mutcnv
+    #
+    # df_combined_eh['Chart q'] = pd.Series(dict_chart_q)
+    # df_combined_eh['Chart mut'] = pd.Series(dict_chart_mut)
     # df_combined_eh['Chart mutcnv'] = pd.Series(dict_chart_mutcnv)
 
     df_combined_eh = df_combined_eh.loc[df_combined_eh[args.join].isin(args.exclude) ==False, :]
@@ -151,6 +155,7 @@ if __name__ == "__main__":
         df_combined_eh = pd.concat([df_combined_eh, df_gene_attr])
 
     # finally, upload to NDEx
+    df_combined_eh = df_combined_eh.loc[df_combined_eh['System_name'].isin(ont.terms + ont.genes), :]
     G =selected_system_diagram(args.ont, df_combined_eh, 'System_name', df_combined_eh.columns.tolist(), args.genes)
     Gnx = nx_to_NdexGraph(G)
 
