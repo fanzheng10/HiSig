@@ -1,24 +1,31 @@
 import argparse
 import pandas as pd
 import sys
-sys.path.append('/cellar/users/f6zheng/tools/lib/python2.7/site-packages')
+sys.path.append('/cellar/users/f6zheng/tools/lib/python2.7/site-packages') # TODO: remove this
 from ddot import *
 import seaborn as sns
 import networkx as nx
-from myutils import *
+from myutils import * # TODO: remove this
 
 
-def selected_system_diagram(ontf, df, key, used_cols, genes=None):
+def selected_system_diagram(ont, df, key, used_cols, genes=None):
     '''
     '''
-    ont = Ontology.from_table(ontf, clixo_format=True, is_mapping=lambda x: x[2] == True)
-    if len(ont.get_roots()) > 1:
-        ont.add_root('ROOT', inplace=True)
-    ont.propagate('forward', inplace=True)
+    # ont = Ontology.from_table(ontf, clixo_format=True, is_mapping=lambda x: x[2] == True)
+    # if len(ont.get_roots()) > 1:
+    #     ont.add_root('ROOT', inplace=True)
+    # ont.propagate('forward', inplace=True)
     chosen_terms = df[key].tolist()
 
     ont_sel = ont.delete(to_keep=chosen_terms +['ROOT']+ ont.genes)
+
     G = ont_sel.to_NdexGraph(layout='bubble')
+    edges_to_remove = []
+    for e in G.edges():
+        if len(list(nx.all_simple_paths(G, e[0], e[1]))) > 1:
+            edges_to_remove.append((e[0], e[1]))
+    G.remove_edges_from(edges_to_remove)
+
     mapping = {}
     for n in G.nodes(data=True):
         if (n[1]['NodeType'] == 'Gene') and ((n[1]['Label'] in genes)==False):
@@ -36,7 +43,7 @@ def selected_system_diagram(ontf, df, key, used_cols, genes=None):
 
 
 par = argparse.ArgumentParser()
-par.add_argument('--input', required=True, help='dataframe, same format to the output of parse.py')
+par.add_argument('--input', required=True, help='dataframe, same format to the output of parse.py') # TODO: combine multiple files
 par.add_argument('--node_attr', help='a dataframe with all the other information of systems')
 par.add_argument('--join', default='System_name', help='use this string to join the two dataframe')
 par.add_argument('--exclude', default=[], nargs='*', help='if specified, excluding certain systems from netwokrs')
@@ -47,11 +54,12 @@ par.add_argument('--name', required=True, help='name for the NDEx network')
 args = par.parse_args()
 
 if __name__ == "__main__":
-    serv, usr, passwd = ndex_login('http://www.ndexbio.org')
+    # TODO: make NDEx login optional
     ont = Ontology.from_table(args.ont,
                               is_mapping=lambda x:x[2]=='gene', clixo_format=True)
     if not 'ROOT' in ont.terms:
         ont.add_root('ROOT', inplace=True)
+    ont.propagate('forward', inplace=True)
 
     df_use = pd.read_table(args.input, sep='\t')
     assert args.join in df_use.columns.tolist()
@@ -64,7 +72,7 @@ if __name__ == "__main__":
 
     terms = df_use[args.join].tolist()
 
-    # add auxiliary nodes
+    # add auxiliary "integrator" nodes
     ont_conn = ont.connected(ont.terms)
     records = []
     ind_sel_terms = np.array([ont.terms.index(t) for t in terms if t in ont.terms])
@@ -79,6 +87,7 @@ if __name__ == "__main__":
     df_ancestor = df_ancestor[[0]]
     df_ancestor.rename(columns = {0:'System_name'}, inplace=True)
 
+    # TODO: what is this part
     for c in df_use.columns:
         if not c in df_use.columns:
             if (df_use[c].dtype == 'int64') or (df_use[c].dtype == 'float64'):
@@ -92,9 +101,20 @@ if __name__ == "__main__":
     if args.node_attr != None:
         df_use = df_use.merge(df_node, how='left', left_on =args.join,right_on=args.join)
 
+    # add term size
+    term_sizes = {i: ont.term_sizes[ont.terms.index(row['System_name'])] for i, row in df_use.iterrows()}
+    df_use['Size'] = pd.Series(term_sizes)
+    term_genes = {i: ' '.join(sorted([ont.genes[g] for g in ont.term_2_gene[row['System_name']]])) for i, row in df_use.iterrows()}
+    df_use['Genes'] = pd.Series(term_genes)
+
+    # TODO: remove unneeded columns
+
     # add enhanced graph (for RBVI)
     df_combined_eh = df_use.copy()
     cols_q = [c for c in df_use.columns.tolist() if c.endswith('-q')]
+
+
+
     df_combined_eh['logSize'] = np.log2(df_combined_eh['Size'])
 
     # color_hex = sns.color_palette("Set1", len(cols_q)).as_hex()
@@ -156,7 +176,9 @@ if __name__ == "__main__":
 
     # finally, upload to NDEx
     df_combined_eh = df_combined_eh.loc[df_combined_eh['System_name'].isin(ont.terms + ont.genes), :]
-    G =selected_system_diagram(args.ont, df_combined_eh, 'System_name', df_combined_eh.columns.tolist(), args.genes)
+    G =selected_system_diagram(ont, df_combined_eh, 'System_name', df_combined_eh.columns.tolist(), args.genes)
+
+
     Gnx = nx_to_NdexGraph(G)
 
     Gnx.set_name(args.name)
@@ -171,5 +193,5 @@ if __name__ == "__main__":
                     counter = counter + 1
 
     G = NdexGraph(cx=cx)
-
+    serv, usr, passwd = ndex_login('http://www.ndexbio.org')
     G.upload_to(serv, usr, passwd)
