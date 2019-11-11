@@ -44,7 +44,7 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
 
             g_signal = [signal[gi] for gi in g_in_t_ind_sort]
             g_rank = [signal_sort[gi] for gi in g_in_t_ind_sort]
-            if signal2 != None:
+            if isinstance(signal2, np.ndarray):
                 g_signal_raw = [signal2[gi] for gi in g_in_t_ind_sort] # TODO: right now if not having this vector, the program will fail. Will make this optional
 
             if len(g_in_t) > print_limit:
@@ -53,7 +53,7 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
                     outlist.extend(['{:.4f}'.format(pvals[i]), '{:.4f}'.format(qvals[i-ngenes])])
                 else:
                     outlist.extend(['', ''])
-                if signal2 != None:
+                if isinstance(signal2, np.ndarray):
                     outlist.extend(['|'.join(map(str, g_signal[:print_limit])),
                                 '|'.join(map(str, g_rank[:print_limit])),
                                 '|'.join(map(str, g_signal_raw[:print_limit]))])
@@ -67,7 +67,7 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
                 else:
                     outlist.extend(['', ''])
                 # outstr.append([i, coef[i], ','.join(g_in_t), ';'.join(map(str, signal_in_t))])
-                if signal2 != None:
+                if isinstance(signal2, np.ndarray):
                     outlist.extend(['|'.join(map(str, g_signal)),
                                 '|'.join(map(str, g_rank)),
                                 '|'.join(map(str, g_signal_raw))])
@@ -76,12 +76,12 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
                                     '|'.join(map(str, g_rank[:print_limit]))])
             outstr.append(outlist)
         elif no_gene == False:
-            if signal2 != None:
+            if isinstance(signal2, np.ndarray):
                 outlist = [i+1, ont.genes[i], '{:.6f}'.format(coef[i]), '', '', signal[i], signal_sort[i], signal2[i]]
             else:
                 outlist = [i + 1, ont.genes[i], '{:.6f}'.format(coef[i]), '', '', signal[i], signal_sort[i]]
             outstr.append(outlist) # for genes, p values are quite meaningless # TODO: recosnider this decision
-    if signal2 !=None:
+    if isinstance(signal2, np.ndarray):
         colnames = ['System_index', 'System_name', 'Genes', 'Selection_pressure', 'p', 'q',
                     'Model_input', 'Rank_of_model_input', signal2_name]
     else:
