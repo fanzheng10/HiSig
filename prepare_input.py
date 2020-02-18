@@ -7,7 +7,7 @@ def prepare_input(ont, sig, outf_conn, outf_sig, file_exist=False):
     :param ont: 
     :param signal: 
     :param outf: 
-    :param scut: 
+    :param scut:  
     :return: 
     '''
     ont = Ontology.from_table(ont, clixo_format=True, is_mapping=lambda x: x[2] == 'gene')
