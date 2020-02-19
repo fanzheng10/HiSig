@@ -95,8 +95,34 @@ if __name__ == "__main__":
             else:
                 df_use[c] = ''
 
+    df_use['Integrator'] = False
+    df_ancestor['Integrator'] = True
     df_use = pd.concat([df_use, df_ancestor])
     df_use.reset_index(inplace=True, drop=True)
+
+    ### aggregate cancer types from descendents
+    dict_ctypes = {}
+    dict_ctypes_collect = {}
+
+    ind_used_terms = np.array([ont.terms.index(t) for t in df_use['System_name'].tolist()])
+    (indx, indy) = np.where(ont_conn)
+
+    for i, row in df_use.iterrows():
+        sys_name, ctypes = row['System_name'], row['Activated in cancer']
+        if row['Integrator']:
+            continue
+        dict_ctypes[sys_name] = ctypes.split(' ')
+
+    for i in range(len(indx)):
+        if (not indx[i] in ind_sel_terms) or (not indy[i] in ind_used_terms):
+            continue
+        t_des, t_ans = ont.terms[indx[i]], ont.terms[indy[i]]
+        if not t_ans in dict_ctypes_collect:
+            dict_ctypes_collect[t_ans] = []
+        dict_ctypes_collect[t_ans].extend(dict_ctypes[t_des])
+
+    df_use['Activate in cancer collected'] = np.array([' '.join(sorted(list(set(dict_ctypes_collect[row['System_name']]))))  for i, row in df_use.iterrows()])
+    df_use['N cancer collected'] = np.array([len(set(dict_ctypes_collect[row['System_name']])) for i, row in df_use.iterrows()])
 
     if args.node_attr != None:
         df_use = df_use.merge(df_node, how='left', left_on =args.join,right_on=args.join)

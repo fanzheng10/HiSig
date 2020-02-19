@@ -99,7 +99,7 @@ df_combined['N cancer'] = np.sum(df_combined[cols_q].notnull(), axis=1)
 ## activate cancer types
 for i, row in df_combined.iterrows():
     active = df_combined.loc[i, cols_q].notnull()
-    active = ','.join([c.split('-')[0] for c in active.loc[active==1].index.tolist()])
+    active = ' '.join([c.split('-')[0] for c in active.loc[active==1].index.tolist()])
     df_combined.loc[i, 'Activated in cancer'] = active
 
 ## module size
@@ -110,7 +110,7 @@ df_combined['Size'] = np.array([dict_size_per_term[t] for t in df_combined['Syst
 ## gene nominations ###
 for c in cohorts:
     sig_genes[c] = sorted(list(set(sig_genes[c])))
-    with open(c + '.sig_genes_q{}.txt'.format(qcut), 'w') as fh:
+    with open(outdir + '/' + c + '.sig_genes_q{}.txt'.format(qcut), 'w') as fh:
         for g in sig_genes[c]:
             fh.write(g + '\n')
 ###
