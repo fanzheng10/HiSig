@@ -50,7 +50,8 @@ par.add_argument('--exclude', default=[], nargs='*', help='if specified, excludi
 par.add_argument('--ont', required=True, help='the hierarchy 3-col file')
 par.add_argument('--genes', default=[], help='a string of gene symbols separated by comma')
 par.add_argument('--gene_attr', help='a dataframe with gene attributes')
-par.add_argument('--name', required=True, help='name for the NDEx network')
+par.add_argument('--name', help='name for the NDEx network')
+par.add_argument('--out', required=True, help='write an output dataframe')
 args = par.parse_args()
 
 if __name__ == "__main__":
@@ -139,56 +140,7 @@ if __name__ == "__main__":
     df_combined_eh = df_use.copy()
     cols_q = [c for c in df_use.columns.tolist() if c.endswith('-q')]
 
-
-
     df_combined_eh['logSize'] = np.log2(df_combined_eh['Size'])
-
-    # color_hex = sns.color_palette("Set1", len(cols_q)).as_hex()
-    #
-    # for c in cols_q:
-    #     ct = c.replace('-q', '')
-    #     df_combined_eh[ct.upper() + '_graphvalue'] = 0
-    #
-    # dict_chart_q, dict_chart_mut, dict_chart_mutcnv = {}, {}, {}
-
-    # for i, row in df_combined_eh.iterrows():
-    #     attr_list = []
-    #     color_list = []
-    #     label_list_q = []
-    #     label_list_mut = []
-    #     # label_list_mutcnv = []
-    #     sig = 0
-    #     for k in range(len(cols_q)):
-    #         if row[cols_q[k]] > 0:
-    #             ct = cols_q[k].replace('-q', '')
-    #             df_combined_eh.loc[i, ct.upper() + '_graphvalue'] = 1
-    #             attr_list.append(ct.upper() + '_graphvalue')
-    #             color_list.append(color_hex[k])
-    #             label_list_q.append(ct + ' ' + str(row[cols_q[k]]))  # why not show frequencies as label
-    #             label_list_mut.append(ct + ' ' + str(row[ct + '_mut']))  # why not show frequencies as label
-    #             # label_list_mutcnv.append(ct + '_' + str(row[ct.lower() + '_mutcnv']))  # why not show frequencies as label
-    #             sig = 1
-    #
-    #     chart_str_q = 'piechart: attributelist="{}" colorlist="{}" labellist="{}" showlabels=True'.format(
-    #         ','.join(attr_list),
-    #         ','.join(color_list),
-    #         ','.join(label_list_q))
-    #     chart_str_mut = 'piechart: attributelist="{}" colorlist="{}" labellist="{}" showlabels=True'.format(
-    #         ','.join(attr_list),
-    #         ','.join(color_list),
-    #         ','.join(label_list_mut))
-    #     # chart_str_mutcnv = 'piechart: attributelist="{}" colorlist="{}" labellist="{}" showlabels=True'.format(
-    #     #     ','.join(attr_list),
-    #     #     ','.join(color_list),
-    #     #     ','.join(label_list_mutcnv))
-    #     if sig:
-    #         dict_chart_q[i] = chart_str_q
-    #         dict_chart_mut[i] = chart_str_mut
-    #         # dict_chart_mutcnv[i] = chart_str_mutcnv
-    #
-    # df_combined_eh['Chart q'] = pd.Series(dict_chart_q)
-    # df_combined_eh['Chart mut'] = pd.Series(dict_chart_mut)
-    # df_combined_eh['Chart mutcnv'] = pd.Series(dict_chart_mutcnv)
 
     df_combined_eh = df_combined_eh.loc[df_combined_eh[args.join].isin(args.exclude) ==False, :]
     df_combined_eh = df_combined_eh.round(3)
@@ -202,22 +154,28 @@ if __name__ == "__main__":
 
     # finally, upload to NDEx
     df_combined_eh = df_combined_eh.loc[df_combined_eh['System_name'].isin(ont.terms + ont.genes), :]
-    G =selected_system_diagram(ont, df_combined_eh, 'System_name', df_combined_eh.columns.tolist(), args.genes)
+    # create nest IDs for systems
+    df_combined_eh.sort_values(by ='Size', ascending=False, inplace=True)
+    df_combined_eh.reset_index(inplace=True, drop=True)
+    df_combined_eh['Nest ID'] = np.array(['NEST:{}'.format(i+1) for i in range(df_combined_eh.shape[0])])
+    df_combined_eh.to_csv(args.out, sep='\t')
+    
+    # also create a new .ont object
+    if args.name !=None:
+        G =selected_system_diagram(ont, df_combined_eh, 'System_name', df_combined_eh.columns.tolist(), args.genes)
 
+        Gnx = nx_to_NdexGraph(G)
+        Gnx.set_name(args.name)
 
-    Gnx = nx_to_NdexGraph(G)
+        cx = Gnx.to_cx()
+        counter = 0
+        for entry in cx:
+            if 'nodeAttributes' in entry:
+                for subentry in entry['nodeAttributes']:
+                    if 'd' in subentry and subentry['d'] == 'unknown':
+                        subentry['d'] = 'double'
+                        counter = counter + 1
 
-    Gnx.set_name(args.name)
-
-    cx = Gnx.to_cx()
-    counter = 0
-    for entry in cx:
-        if 'nodeAttributes' in entry:
-            for subentry in entry['nodeAttributes']:
-                if 'd' in subentry and subentry['d'] == 'unknown':
-                    subentry['d'] = 'double'
-                    counter = counter + 1
-
-    G = NdexGraph(cx=cx)
-    serv, usr, passwd = ndex_login('http://www.ndexbio.org')
-    G.upload_to(serv, usr, passwd)
+        G = NdexGraph(cx=cx)
+        serv, usr, passwd = ndex_login('http://www.ndexbio.org')
+        G.upload_to(serv, usr, passwd)

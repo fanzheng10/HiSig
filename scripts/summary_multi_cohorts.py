@@ -18,6 +18,7 @@ if not os.path.isdir(outdir):
 ###
 
 ### global variables ###
+# TODO: change to argparse
 
 qcut = float(sys.argv[4])
 hisig_summary_tag = '_ms_impact_summary.tsv'
