@@ -63,6 +63,7 @@ if __name__ == "__main__":
     ont.propagate('forward', inplace=True)
 
     df_use = pd.read_table(args.input, sep='\t')
+    df_use = df_use.loc[df_use['System_name'].isin(ont.terms), :]
     assert args.join in df_use.columns.tolist()
 
     if args.node_attr != None:
@@ -110,6 +111,8 @@ if __name__ == "__main__":
 
     for i, row in df_use.iterrows():
         sys_name, ctypes = row['System_name'], row['Activated in cancer']
+        # if not sys_name in ont.terms:
+        #     continue
         if row['Integrator']:
             continue
         dict_ctypes[sys_name] = ctypes.split(' ')
@@ -122,7 +125,7 @@ if __name__ == "__main__":
             dict_ctypes_collect[t_ans] = []
         dict_ctypes_collect[t_ans].extend(dict_ctypes[t_des])
 
-    df_use['Activate in cancer collected'] = np.array([' '.join(sorted(list(set(dict_ctypes_collect[row['System_name']]))))  for i, row in df_use.iterrows()])
+    df_use['Activate in cancer collected'] = np.array([' '.join(sorted(list(set(dict_ctypes_collect[row['System_name']])))) for i, row in df_use.iterrows()])
     df_use['N cancer collected'] = np.array([len(set(dict_ctypes_collect[row['System_name']])) for i, row in df_use.iterrows()])
 
     if args.node_attr != None:

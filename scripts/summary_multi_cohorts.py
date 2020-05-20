@@ -79,7 +79,10 @@ for c in cohorts:
             combined_dfs[c].loc[i, c.upper() + '-adjusted_ranked_mutation_counts'] = counts_reordered
             combined_dfs[c].loc[i, c.upper() + '-adjusted_top2_genes'] = genes_reordered[0] + ' ' + genes_reordered[1]
             sig_genes[c].extend(genes_reordered[:2])
-        combined_dfs[c].loc[i, c.upper() + '-raw_mut_freq'] = dict_mut_freq_per_term[c][row['System_name']]
+        if row['System_name'] in dict_mut_freq_per_term[c]:
+            combined_dfs[c].loc[i, c.upper() + '-raw_mut_freq'] = dict_mut_freq_per_term[c][row['System_name']]
+        else:
+            combined_dfs[c].loc[i, c.upper() + '-raw_mut_freq'] = None
 
 df_combined = combined_dfs[cohorts[0]].copy()
 for i in range(1, len(cohorts)):
@@ -104,7 +107,7 @@ for i, row in df_combined.iterrows():
     df_combined.loc[i, 'Activated in cancer'] = active
 
 ## module size
-df_combined['Size'] = np.array([dict_size_per_term[t] for t in df_combined['System_name'].tolist()])
+df_combined['Size'] = np.array([dict_size_per_term[t] if t in dict_size_per_term else None for t in df_combined['System_name'].tolist()])
 
 ###
 
