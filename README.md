@@ -1,9 +1,12 @@
 # HiSig
 
+![Figure](figs3.png)
+
+
 Given a hierarhical model of inter-connected systems, HiSig is a program that searches for a parsimonious set of systems as features explaining the signals observed on the leaves (bottom nodes) of such hierarchy, at multiple resolutions. 
 
 # Dependencies
-* The DDOT (`Data-driven Ontology Toolkit`) package (url), ensure all the Python dependencies specified there.   (**TODO: make it unnecessary to install DDOT**)
+* The DDOT (`Data-driven Ontology Toolkit`) package (url), ensure all the Python dependencies specified there.
 * A working installation of R. We have tested on R 3.4.  Require libraries `glmnet`, `Matrix`, and `parallel`
 * Python package `statsmodels`
 * for efficient permutation test, need multiple CPU cores.
