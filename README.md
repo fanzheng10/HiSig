@@ -1,45 +1,51 @@
 # HiSig
+Enrichment analysis for nested and overlapping gene sets
 
-<p align="center">
-  <img src="figs3.png" width="500" align="center">
-</p>
-Given a hierarhical model of inter-connected systems, HiSig is a program that searches for a parsimonious set of systems as features explaining the signals observed on the leaves (bottom nodes) of such hierarchy, at multiple resolutions. 
+# Introduction
+HiSig is a program to identify a parsimonious list of gene sets (systems) to explain the signals associated with individual genes. It satisfies the purpose of Gene Set Enrichment Analysis, but much reduces the redundancy in results when provided gene sets that are overlapping or nested (e.g. the gene sets in the Gene Ontology, or other hierarchically structured gene sets). HiSig applies Lasso at multiple stringency of L1-regularization.
+
+We use HiSig to study the gene sets which significantly aggregate somatic mutations in cancer. A manuscript is under preparation. 
 
 # Dependencies
-* The DDOT (`Data-driven Ontology Toolkit`) package (url), ensure all the Python dependencies specified there.
+* The DDOT (`Data-driven Ontology Toolkit`) package (https://ddot.readthedocs.io/en/latest/), ensure all the Python dependencies specified there.
 * A working installation of R. We have tested on R 3.4.  Require libraries `glmnet`, `Matrix`, and `parallel`
 * Python package `statsmodels`
-* for efficient permutation test, need multiple CPU cores.
+* For efficient permutation test, need multiple CPU cores.
 
 
 # Usage
 
-The Jupyter notebook `examples/demo.ipynb` illustrates the usage of the package step by step. 
+Sample files are in the `/examples` directory.
 
-## prepare the input
-One should start with a file describing a hierarchical model, which is a 3-column text file  defined in the `DDOT` package (see `sample.ont`),  and another 2-column text file with signals on leaves nodes (see `sample_genescore.tsv`). In our use case, leaves nodes are interpreted as genes and the signals on leaves are interpreted as the (transformed) number of observed mutations of each gene.   
-**TODO: sample_genescore is not here yet**
+## 1. prepare the input
+One can start with a file describing a hierarchical model, which is a 3-column text file  defined in the `DDOT` package (see `sample.ont`),  and another 2-column text file with signals on leaf-nodes in the hierarchical model (see `sample_genescore.tsv`). In our use case, leaf-nodes are interpreted as genes and the signals on leaf-nodes are interpreted as the number of observed mutations (which could have been appropriately adjusted or transformed) of each gene in a cancer cohort.  
 
 Example usage:
 `python prepare_input.py --ont sample.ont --sig sample_genescore.tsv --out sample_signal.txt`
 
 
-After running `prepare_input.py`, one should get two files: (1) a sparse matrix defining gene-to-system membership (in text format, see `sample_conn.txt`); (2) a text file with real values (see `sample_signals.txt`), genes in the input file (`sample_genescore.tsv`) but not in the hierarchy (`sample.ont`) will be omitted. 
+After running `prepare_input.py`, one should get two files:   
+(1) A sparse binary matrix defining gene-to-system (genes as row; systems as columns) membership (in TXT format, see `sample_conn.txt`). It corresponds to in the `[I, H]` in the following figure. Here, `I` is an identity matrix since we treat individual genes as systems as well, in order to prevent systems where most signals can be explained by a single gene.  
+(2) A text file with real values (see `sample_signals.txt`), genes in the input file (`sample_genescore.tsv`) but not in the hierarchy (`sample.ont`) will be omitted. It corresponds to the `y` vector in the following figure.
 
 
-## running Lasso regression
+<p align="center">
+  <img src="figs3.png" width="600" align="center">
+</p>
+
+
+
+## 2. running Lasso regression
 
 `R -f R/glmnet.R --args sample_conn.txt sample_signals.txt sample_ms_impact 10`
 
-The first two arguments of this script are the 2 outputs of the previous step; the 3rd argument defines the file name of the R script output; the 4th argument (optional) is for batch size of permutation. The batch number is 10 to enable parallelization. The number of total permutation is `batch_number * batch_size`, and thus it is 100 in the demo. By default, batch size is set to 1000, so it performs 10000 permutations.
+The first two arguments of this script are the 2 outputs of the previous step; the 3rd argument (`"sample_ms_impact"`) defines the file name of the R script output; the 4th argument (`"10"`) is for batch size of permutation. The batch number is 10 to enable parallelization. The number of total permutation is `batch_number * batch_size`, and thus it is 100 in the demo. By default, batch size is set to 1000, so it performs 10000 permutations.
 
 **By default the script use 7 CPU cores; to change it, edit the `max_cores` in `glmnet.R` script**
 
-This step generates two outputs: `sample_ms_impact.coef` and `sample_ms_impact.impact-w-rand.tsv`.
+This step generates two outputs: `sample_ms_impact.coef` and `sample_ms_impact.impact-w-rand.tsv` (big files, not included in `/examples`)
 
-*TODO: the second file is too big and thus not included; create small examples later*
-
-## parse the results
+## 3. parse the results
 
 Use `parse.py` to parse the results. Example of usage:
 
