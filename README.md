@@ -41,7 +41,8 @@ After running `prepare_input.py`, one should get two files:
 
 The first two arguments of this script are the 2 outputs of the previous step; the 3rd argument (`"sample_ms_impact"`) defines the file name of the R script output; the 4th argument (`"10"`) is for batch size of permutation. The batch number is 10 to enable parallelization. The number of total permutation is `batch_number * batch_size`, and thus it is 100 in the demo. By default, batch size is set to 1000, so it performs 10000 permutations.
 
-**By default the script use 7 CPU cores; to change it, edit the `max_cores` in `glmnet.R` script**
+**By default the script use 7 CPU cores; to change it, edit the `max_cores` in `glmnet.R` script**  
+**P-values are calculated in an empirical distribution. So the minimum possible p-value depends on the number of permutations**
 
 This step generates two outputs: `sample_ms_impact.coef` and `sample_ms_impact.impact-w-rand.tsv` (big files, not included in `/examples`)
 
