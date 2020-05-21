@@ -1,8 +1,13 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
 # HiSig
 
-![Figure](figs3.png)
-
-
+<p align="center">
+  <img src="figs3.png" width="500" align="center">
+</p>
 Given a hierarhical model of inter-connected systems, HiSig is a program that searches for a parsimonious set of systems as features explaining the signals observed on the leaves (bottom nodes) of such hierarchy, at multiple resolutions. 
 
 # Dependencies
