@@ -5,12 +5,14 @@ from scipy.sparse import *
 from scipy.stats import rankdata
 
 
-def printModuleProfile(coef, ont, signal, pvals, qvals,
+def printModuleProfile(coef, mat_gene2term, terms, genes, signal, pvals, qvals,
                        signal2 = None, top=None, print_limit=25, min_term_size=2, no_gene=False, signal2_name='Mutation_count'):
     '''
 
     :param coef: selection score
-    :param ont: ontology object
+    :param ont_conn: gene-to-term membership file (ont_conn)
+    :param term_names: term names
+    :param gene_names
     :param signal: input of the lasso model
     :param signal2: number of mutations for each gene
     :param pvals: p values of each system
@@ -20,7 +22,11 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
     :param no_gene: if True, the results only contain terms
     :return:
     '''
-    ngenes = len(ont.genes)
+    ngenes = len(genes)
+    term_sizes = np.squeeze(np.asarray(np.sum(mat_gene2term[:, ngenes:], axis=0)))
+    print(term_sizes.shape)
+    term_2_gene = {terms[ti]:find(mat_gene2term[:, ti+ngenes])[0] for ti in range(len(terms))}
+
     idx = np.argsort(pvals)
 
     if top!=None:
@@ -33,14 +39,14 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
         if coef[i] == 0:
             break
         if i >= ngenes: # if the system is a term
-            t = ont.terms[i-ngenes]
-            if ont.term_sizes[i-ngenes] <  min_term_size:
+            t = terms[i-ngenes]
+            if term_sizes[i-ngenes] <  min_term_size:
                 continue
 
-            g_in_t_ind = [gi for gi in ont.term_2_gene[t]]
+            g_in_t_ind = [gi for gi in term_2_gene[t]]
             g_in_t_ind_sort = sorted(g_in_t_ind, key = lambda x:signal_sort[x])
 
-            g_in_t = [ont.genes[gi] for gi in g_in_t_ind_sort]
+            g_in_t = [genes[gi] for gi in g_in_t_ind_sort]
 
             g_signal = [signal[gi] for gi in g_in_t_ind_sort]
             g_rank = [signal_sort[gi] for gi in g_in_t_ind_sort]
@@ -77,9 +83,9 @@ def printModuleProfile(coef, ont, signal, pvals, qvals,
             outstr.append(outlist)
         elif no_gene == False:
             if isinstance(signal2, np.ndarray):
-                outlist = [i+1, ont.genes[i], '{:.6f}'.format(coef[i]), '', '', signal[i], signal_sort[i], signal2[i]]
+                outlist = [i+1, genes[i], '{:.6f}'.format(coef[i]), '', '', signal[i], signal_sort[i], signal2[i]]
             else:
-                outlist = [i + 1, ont.genes[i], '{:.6f}'.format(coef[i]), '', '', signal[i], signal_sort[i]]
+                outlist = [i + 1, genes[i], '{:.6f}'.format(coef[i]), '', '', signal[i], signal_sort[i]]
             outstr.append(outlist) # for genes, p values are quite meaningless # TODO: recosnider this decision
     if isinstance(signal2, np.ndarray):
         colnames = ['System_index', 'System_name', 'Genes', 'Selection_pressure', 'p', 'q',
@@ -143,7 +149,7 @@ def feature_best_lambda(coef):
     return idy, mat_feature_argmax[idy] + (mat_feature_lambda.shape[1] -np.sum(idx))
 
 
-def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile, outf=None, save_per_patient=False, print_limit=25):
+def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile, outf=None, save_per_patient=False, print_limit=25): # TODO: remove ont from this function (right now not used)
     '''
     to estimate number of samples mutated by each system
     :param ont: an Ontology object

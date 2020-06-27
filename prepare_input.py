@@ -44,6 +44,9 @@ def prepare_input(ont, sig, outf_conn, outf_sig):
         for i in range(len(row)):
             ofh.write('{}\t{}\n'.format(row[i], len(genes) + col[i]))
 
+    with open('genes.txt', 'w') as fh:
+        for i in range(len(genes)):
+            fh.write(genes[i] + '\n')
     with open('terms.txt', 'w') as fh:
         for i in range(len(terms)):
             fh.write(terms[i] + '\n')
