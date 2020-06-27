@@ -7,9 +7,8 @@ HiSig is a program to identify a parsimonious list of gene sets (systems) to exp
 We use HiSig to study the gene sets which significantly aggregate somatic mutations in cancer. A manuscript is under preparation. 
 
 # Dependencies
-* The DDOT (`Data-driven Ontology Toolkit`) package (https://ddot.readthedocs.io/en/latest/), ensure all the Python dependencies specified there.
 * A working installation of R. We have tested on R 3.4.  Require libraries `glmnet`, `Matrix`, and `parallel`
-* Python package `statsmodels`
+* Python package `statsmodels (0.9)`, `numpy` and `scipy` (any version should work)
 * For efficient permutation test, need multiple CPU cores.
 
 
