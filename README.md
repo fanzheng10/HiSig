@@ -30,7 +30,7 @@ After running `prepare_input.py`, one should get two files:
 
 
 <p align="center">
-  <img src="figs3.png" width="600" align="center">
+  <img src="fig1.png" width="600" align="center">
 </p>
 
 
