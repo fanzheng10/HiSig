@@ -36,7 +36,7 @@ def parse_r_output(rout, ont_conn, terms, genes, signal,
 
     rout_batches = []
     for i in range(len(rout)):
-        rout_batch = pd.read_table(rout[i], sep="\t", header=None, index_col=0)
+        rout_batch = pd.read_csv(rout[i], sep="\t", header=None, index_col=0)
         rout_batches.append(rout_batch)
     real_result = np.array(rout_batches[0][1])
 

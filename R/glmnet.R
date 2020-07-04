@@ -25,7 +25,7 @@ realy <- as.matrix(read.table(yfname, header=F))
 
 fit <- glmnet(X_sp, realy, 
               lambda.min = 0.0001, nlambda = 500,
-              standardize=F, lower.limit=0)
+              standardize=F, lower.limit=0, family='poisson')
 
 coef = as.matrix(fit$beta)
 coef = round(coef, digits=6)
