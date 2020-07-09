@@ -7,9 +7,8 @@ HiSig is a program to identify a parsimonious list of gene sets (systems) to exp
 We use HiSig to study the gene sets which significantly aggregate somatic mutations in cancer. A manuscript is under preparation. 
 
 # Dependencies
-* The DDOT (`Data-driven Ontology Toolkit`) package (https://ddot.readthedocs.io/en/latest/), ensure all the Python dependencies specified there.
 * A working installation of R. We have tested on R 3.4.  Require libraries `glmnet`, `Matrix`, and `parallel`
-* Python package `statsmodels`
+* Python package `statsmodels (0.9)`, `numpy` and `scipy` (any version should work)
 * For efficient permutation test, need multiple CPU cores.
 
 
@@ -24,9 +23,10 @@ Example usage:
 `python prepare_input.py --ont sample.ont --sig sample_genescore.tsv --out sample_signal.txt`
 
 
-After running `prepare_input.py`, one should get two files:   
+After running `prepare_input.py`, one should get the following files:   
 (1) A sparse binary matrix defining gene-to-system (genes as row; systems as columns) membership (in TXT format, see `sample_conn.txt`). It corresponds to in the `[I, H]` in the following figure. Here, `I` is an identity matrix since we treat individual genes as systems as well, in order to prevent systems where most signals can be explained by a single gene.  
-(2) A text file with real values (see `sample_signals.txt`), genes in the input file (`sample_genescore.tsv`) but not in the hierarchy (`sample.ont`) will be omitted. It corresponds to the `y` vector in the following figure.
+(2) A text file with real values (see `sample_signals.txt`), genes in the input file (`sample_genescore.tsv`) but not in the hierarchy (`sample.ont`) will be omitted. It corresponds to the `y` vector in the following figure.  
+(3) Two files called `genes.txt` and `terms.txt`, they will be needed in the step 3.
 
 
 <p align="center">
@@ -50,6 +50,6 @@ This step generates two outputs: `sample_ms_impact.coef` and `sample_ms_impact.i
 
 Use `parse.py` to parse the results. Example of usage:
 
-`python parse.py --ont sample.ont --rout sample_ms_impact.impact-w-rand.tsv --signal sample_signals.txt --out sample_ms_impact_summary.tsv`
+`python parse.py --ont_conn sample_conn.txt --rout sample_ms_impact.impact-w-rand.tsv --terms terms.txt --genes genes.txt --signal sample_signals.txt --out sample_ms_impact_summary.tsv`
 
 The final result is `sample_ms_impact_summary.tsv`, in which each row is a gene set (system); gene sets are ordered by their q-value (Benjamini-Hochberg FDR). The columns `Mutation model input` and `Rank of model` represent genes' signals in the input and their ranks among all genes, to help understand the results.   

@@ -1,11 +1,11 @@
 import argparse
 import pandas as pd
 import numpy as np
-from ddot import *
+from scipy.sparse import *
 from statsmodels.stats.multitest import *
-from HiSig import *
+from HiSig.utils import *
 
-def parse_r_output(ont, rout, signal,
+def parse_r_output(rout, ont_conn, terms, genes, signal,
                    signal2=None, outf=None, min_term_size=2, node_attr=None):
     '''
     
@@ -18,11 +18,16 @@ def parse_r_output(ont, rout, signal,
     :param node_attr: 
     :return: 
     '''
-    ont = Ontology.from_table(ont, clixo_format=True, is_mapping=lambda x: x[2] == 'gene')
-    ont.propagate('forward', inplace=True)
-    if len(ont.get_roots()) > 1:
-        ont.add_root('ROOT', inplace=True)
-    ngenes = len(ont.genes)
+
+    coo_gene_term = np.loadtxt(ont_conn).astype(int)
+    mat_gene2term = coo_matrix((np.ones(coo_gene_term.shape[0],), (coo_gene_term[:, 0], coo_gene_term[:, 1])))
+    mat_gene2term = mat_gene2term.tocsr()
+
+    gene_names = [l.strip() for l in open(genes).readlines()]
+    term_names = [l.strip() for l in open(terms).readlines()]
+    term_sizes = np.sum(mat_gene2term, axis=0)
+
+    ngenes = len(gene_names)
 
     assert ngenes == len(signal), 'error in [signal]: incorrect number of genes'
     if isinstance(signal2, np.ndarray):
@@ -31,7 +36,7 @@ def parse_r_output(ont, rout, signal,
 
     rout_batches = []
     for i in range(len(rout)):
-        rout_batch = pd.read_table(rout[i], sep="\t", header=None, index_col=0)
+        rout_batch = pd.read_csv(rout[i], sep="\t", header=None, index_col=0)
         rout_batches.append(rout_batch)
     real_result = np.array(rout_batches[0][1])
 
@@ -50,14 +55,16 @@ def parse_r_output(ont, rout, signal,
     if min_term_size == 2:
         multitest = multipletests(pvals[ngenes:], alpha=0.3, method='fdr_bh', is_sorted=False)
         qvals = multitest[1]
-        df = printModuleProfile(real_result, ont, signal, signal2=signal2, pvals=pvals, qvals=qvals,
+        df = printModuleProfile(real_result, mat_gene2term, term_names, gene_names, signal, signal2=signal2, pvals=pvals, qvals=qvals,
                                 no_gene=True)
     else:
-        ont_term_used = np.array([i for i in range(len(ont.terms)) if ont.term_sizes[i] >= min_term_size])
-        multitest = multipletests(pvals[ngenes:][ont_term_used], alpha=0.3, method='fdr_bh', is_sorted=False)
-        qvals = np.zeros(len(ont.terms), )
-        qvals[ont_term_used] = multitest[1]
-        df = printModuleProfile(real_result, ont, signal, signal2=signal2, pvals=pvals, qvals=qvals,
+        term_used = np.array([i for i in range(len(term_names)) if term_sizes[i] >= min_term_size])
+        multitest = multipletests(pvals[ngenes:][term_used], alpha=0.3, method='fdr_bh', is_sorted=False)
+        qvals = np.zeros(len(terms), )
+        qvals[term_used] = multitest[1]
+        term_names = term_used[term_used]
+        mat_gene2term = mat_gene2term[:, term_used]
+        df = printModuleProfile(real_result, mat_gene2term, term_names, gene_names, signal, signal2=signal2, pvals=pvals, qvals=qvals,
                                 no_gene=True, min_term_size=min_term_size)
 
     df.sort_values(by=['q', 'p', 'Selection_pressure'], ascending=[True, True, False], inplace=True)
@@ -76,8 +83,10 @@ def parse_r_output(ont, rout, signal,
 if __name__ == "__main__":
 
     par = argparse.ArgumentParser()
-    par.add_argument('--ont', required=True, help='the ontology file')
+    par.add_argument('--ont_conn', required=True, help='the ontology file')
     par.add_argument('--rout', required=True, nargs = '+', help='the output of R; if there are multiple files concatenate them')
+    par.add_argument('--terms', required=True)
+    par.add_argument('--genes', required=True)
     par.add_argument('--signal', required=True, help='per gene mutation signal - the actual input of the Lasso regression (transformation of mutation);')
     par.add_argument('--signal2', help='another per gene signal to help interpretation; in this case can be the raw rount of mutations')
     par.add_argument('--out', required=True, help='output of this script')
@@ -90,5 +99,5 @@ if __name__ == "__main__":
     if args.signal2 != None:
         signal2 = np.loadtxt(args.signal2).astype(int)
 
-    parse_r_output(args.ont, args.rout, signal,
+    parse_r_output(args.rout, args.ont_conn, args.terms, args.genes, signal,
                    signal2=signal2, outf=args.out, min_term_size=args.min_term_size, node_attr=args.node_attr)
