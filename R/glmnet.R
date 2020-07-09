@@ -9,11 +9,15 @@ outfname <- args[3]
 
 mode = 2 # mode 2 have the most reasonable results in this setting
 # mode <- as.integer(args[4]) # if 1, calculate p-value by weight; if 2, calculate p-value by proportion
+family = 'poisson'
 batch = 1000
 if (length(args) ==4) {
   batch = as.integer(args[4])
 }
 batch_size = 10
+if (length(args)==5) {
+  family = args[5] # can choose whatever fits the glmnet, e.g. "poisson" or "gaussian"
+}
 
 max_cores = 7
 n_cores = min(detectCores()-1, max_cores)
@@ -25,7 +29,7 @@ realy <- as.matrix(read.table(yfname, header=F))
 
 fit <- glmnet(X_sp, realy, 
               lambda.min = 0.0001, nlambda = 500,
-              standardize=F, lower.limit=0, family='poisson')
+              standardize=F, lower.limit=0, family=family)
 
 coef = as.matrix(fit$beta)
 coef = round(coef, digits=6)
@@ -40,7 +44,7 @@ beta_max = apply(norm_beta, 1, max)
 fitrandom1 <- function(k) {
   y = sample(realy)
   fitr <- glmnet(X_sp, y, lambda = fit$lambda, 
-                 standardize=F, lower.limit=0)
+                 standardize=F, lower.limit=0, family=family)
   rcoef <- as.matrix(round(fitr$beta, digits=6))
   return (coef <= rcoef)
 }
@@ -48,7 +52,7 @@ fitrandom1 <- function(k) {
 fitrandom2 <- function(k) {
   y = sample(realy)
   fitr <- glmnet(X_sp, y, lambda = fit$lambda, 
-                 standardize=F, lower.limits=0)
+                 standardize=F, lower.limits=0, family=family)
   rcoef <- as.matrix(fitr$beta)
   rcoef = round(rcoef, digits=6)
   rcoef1 = rcoef[, colSums(rcoef) >0]
@@ -61,7 +65,7 @@ fitrandom2 <- function(k) {
 fitrandom3 <- function(k) {
   y = sample(realy)
   fitr <- glmnet(X_sp, y, lambda = fit$lambda,
-                 standardize=F, lower.limits=0)
+                 standardize=F, lower.limits=0, family=family)
   rcoef <- as.matrix(fitr$beta)
   rcoef = round(rcoef, digits=6)
   rcoef1 = rcoef[, colSums(rcoef) >0]

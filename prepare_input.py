@@ -68,9 +68,9 @@ if __name__ == "__main__":
     par = argparse.ArgumentParser()
     par.add_argument('--ont', required=True, help = 'an ontology file')
     par.add_argument('--sig', required=True, help = 'a text file for the signal on gene (leaf nodes)')
-    par.add_argument('--out', required=True, help = 'output file')
+    par.add_argument('--out', required=True, help = 'output prefix')
     par.add_argument('--exist', action='store_true', help='if true, skip generating sparse matrix (redundant)')
     args = par.parse_args()
 
 
-    prepare_input(args.ont, args.sig, 'ont_conn.txt', args.out)
+    prepare_input(args.ont, args.sig, args.out+ '_conn.txt', args.out + '_signal.txt')
