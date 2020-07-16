@@ -1,9 +1,21 @@
 library(fabricatr)
+library(optparse)
 
-nlayers = 4
-M = c(5,5,5,5)
-layer_names = paste0('L', 1:4)
-p = 0.4
+option_list = list(
+  make_option(c("-n", "--nlayer"), 
+              type="integer", default=4),
+  make_option(c("-s", "--size_per_layer"), 
+              type="integer", default=5),
+  make_option(c("-p", "--prob_pos"), 
+                type="float", default=0.1));
+
+opt_parser = OptionParser(option_list=option_list);
+opt = parse_args(opt_parser);
+
+nlayers = opt$nlayer
+M = rep(opt$size_per_layer, nlayers)
+layer_names = paste0('L', 1:nlayers)
+p = opt$prob_pos
 
 hier_data <-
   fabricate(
@@ -17,7 +29,6 @@ hier_data <-
 names(hier_data)[names(hier_data) == 'L'] <- 'L1'
 names(hier_data)[names(hier_data) == 'select'] <- 'L1.select'
 # names(hier_data)[names(hier_data) == 'weight'] <- 'L1.weight'
-hier_data$sum_weight = 0
 
 for (x in 2:nlayers) {
   hier_data <-
@@ -91,7 +102,7 @@ write.conn<-function(nlayers) {
 }
 
 write.score <- function() {
-  X <- paste0(hier_data$sum_weight)
+  X <- paste0(hier_data$weight)
   outf = 'genescore.tsv'
   filecon <- file(outf)
   writeLines(X, filecon)

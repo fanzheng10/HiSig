@@ -4,7 +4,7 @@ Enrichment analysis for nested and overlapping gene sets
 # Introduction
 HiSig is a program to identify a parsimonious list of gene sets (systems) to explain the signals associated with individual genes. It satisfies the purpose of Gene Set Enrichment Analysis, but much reduces the redundancy in results when provided gene sets that are overlapping or nested (e.g. the gene sets in the Gene Ontology, or other hierarchically structured gene sets). HiSig applies Lasso at multiple stringency of L1-regularization.
 
-We use HiSig to study the gene sets which significantly aggregate somatic mutations in cancer. A manuscript is under preparation. 
+We use HiSig to study the gene sets which significantly aggregate somatic mutations in cancer. A manuscript is under review. 
 
 # Dependencies
 * A working installation of R. We have tested on R 3.4.  Require libraries `glmnet`, `Matrix`, and `parallel`
