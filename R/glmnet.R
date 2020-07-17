@@ -2,6 +2,8 @@ library(glmnet)
 library(Matrix)
 library(parallel)
 
+#TODO add optparse here
+
 args <- commandArgs(trailingOnly = TRUE)
 xfname <- args[1] # sparse matrix
 yfname <- args[2]

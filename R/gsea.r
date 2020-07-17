@@ -11,10 +11,6 @@ perm = 1000
 
 out = 'gsea_results.txt'
 
-C <- as.matrix(read.table(f_conn, header=F))
-C_sp = sparseMatrix(C[,1], C[,2], index1 = F)
-C_sp = C_sp[, (nrow(g_list) + 1):dim(C_sp)[2]]
-
 # probably need multi-core too
 
 g_list = read.table(f_g, header=F)
@@ -22,6 +18,10 @@ t_list = read.table(f_t, header=F)
 g_score = read.table(f_gs, header=F)
 eps = rnorm(nrow(g_list), sd=eps_std)
 eps = eps - min(eps)
+
+C <- as.matrix(read.table(f_conn, header=F))
+C_sp = sparseMatrix(C[,1], C[,2], index1 = F)
+C_sp = C_sp[, (nrow(g_list) + 1):dim(C_sp)[2]]
 
 g_score = g_score + eps
 
