@@ -16,7 +16,7 @@ out = 'gsea_results.txt'
 g_list = read.table(f_g, header=F)
 t_list = read.table(f_t, header=F)
 g_score = read.table(f_gs, header=F)
-eps = rnorm(nrow(g_list), sd=eps_std)
+eps = round(rnorm(nrow(g_list), sd=eps_std), 6)
 eps = eps - min(eps)
 
 C <- as.matrix(read.table(f_conn, header=F))

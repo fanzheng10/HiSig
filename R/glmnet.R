@@ -11,7 +11,7 @@ outfname <- args[3]
 
 mode = 2 # mode 2 have the most reasonable results in this setting
 # mode <- as.integer(args[4]) # if 1, calculate p-value by weight; if 2, calculate p-value by proportion
-family = 'poisson'
+family = 'gaussian'
 batch = 1000
 if (length(args) ==4) {
   batch = as.integer(args[4])

@@ -1,18 +1,20 @@
 library(fabricatr)
 library(optparse)
 
-option_list = list(
+option_list = list( # don't use R -f, but Rscript
   make_option(c("-n", "--nlayer"), 
               type="integer", default=4),
-  make_option(c("-s", "--size_per_layer"), 
+  make_option(c("-m", "--size_per_layer"), 
               type="integer", default=5),
-  make_option(c("-p", "--prob_pos"), 
-                type="float", default=0.1));
+  make_option(c("-p", "--prob_pos"),
+                type="double", default=0.1),
+  make_option(c("--log"), action='store_true', default = T)
+);
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
-nlayers = opt$nlayer
+nlayers = opt$nlayer +1
 M = rep(opt$size_per_layer, nlayers)
 layer_names = paste0('L', 1:nlayers)
 p = opt$prob_pos
@@ -50,8 +52,12 @@ hier_data$weight = 0
 N = nrow(hier_data)
 for (x in 1:nlayers) {
   cols = paste0('L', x, '.select')
-  weight = rpois(N, 1)* hier_data[[cols]]
+  weight = rpois(N, 1)* hier_data[[cols]] # this is ok, Poisson process is memoryless
   hier_data$weight <- hier_data$weight + weight
+}
+
+if (opt$log ==T) {
+  hier_data$weight <- log1p(hier_data$weight)
 }
 
 
@@ -102,10 +108,10 @@ write.conn<-function(nlayers) {
 }
 
 write.score <- function() {
-  X <- paste0(hier_data$weight)
+  X <- hier_data$weight
   outf = 'genescore.tsv'
   filecon <- file(outf)
-  writeLines(X, filecon)
+  writeLines(format(X, digits=3), filecon)
   close(filecon)
 }
 
