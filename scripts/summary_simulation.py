@@ -58,6 +58,18 @@ for d in dirs:
         auc = metrics.auc(fpr, tpr)
         records.append([N, m, p, auc, 'gsea', k])
 
+    # normal Lasso
+    lasso_f = 'normal_lasso.txt'
+    if os.path.isfile(lasso_f):
+        df_all['lasso_selected'] = 0
+        lasso_sel = [l.strip() for l in open(lasso_f).readlines()]
+        df_all.loc[lasso_sel, 'lasso_selected'] = 1
+        fpr, tpr, _ = metrics.roc_curve(np.array(df_all['selected']),
+                                       -np.array(df_all['lasso_selected']))
+        auc = metrics.auc(fpr, tpr)
+        records.append([N, m, p, auc, 'lasso', k])
+
+
 os.chdir(odir)
 df_out = pd.DataFrame.from_records(records, columns=['N', 'm', 'p', 'AUC', 'Method', 'trial'])
 df_out = df_out.round(3)
