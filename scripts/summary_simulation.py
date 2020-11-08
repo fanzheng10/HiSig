@@ -65,7 +65,7 @@ for d in dirs:
         lasso_sel = [l.strip() for l in open(lasso_f).readlines()]
         df_all.loc[lasso_sel, 'lasso_selected'] = 1
         fpr, tpr, _ = metrics.roc_curve(np.array(df_all['selected']),
-                                       -np.array(df_all['lasso_selected']))
+                                       np.array(df_all['lasso_selected']))
         auc = metrics.auc(fpr, tpr)
         records.append([N, m, p, auc, 'lasso', k])
 
