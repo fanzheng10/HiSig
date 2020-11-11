@@ -17,5 +17,5 @@ RoxygenNote: 7.1.1
 Imports:
   glmnet (>= 4.0.2),
   Matrix (>= 1.2.18),
-  parallel
+  parallel,
   dplyr

@@ -2,10 +2,23 @@
 % Please edit documentation in R/model.R
 \name{load_data}
 \alias{load_data}
-\title{Load a Matrix}
+\title{Load data for HiSig}
 \usage{
 load_data(xfname, yfname, index1 = T)
 }
+\arguments{
+\item{xfname}{A two column numerical file representing a sparse matrix. The
+1st/2nd dimension encodes the rows/columns of the binary design matrix.}
+
+\item{yfname}{A numerical file containing the observed signal (response
+variable) for genes.}
+}
+\value{
+A list containing the \code{design} and \code{response} fields.
+}
 \description{
-Load a Matrix
+This function loads the design matrix and a response vector, the components
+of a HiSig model. The rows and columns of the binary design matrix represent
+genes and gene sets, respectively. If the element at (i, j) is 1, then the
+i-th gene is a member of the j-th gene set
 }
