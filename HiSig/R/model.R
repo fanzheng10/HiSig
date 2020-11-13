@@ -8,20 +8,22 @@
 #'   1st/2nd dimension encodes the rows/columns of the binary design matrix.
 #' @param yfname A numerical file containing the observed signal (response
 #'   variable) for genes.
-#' @return A list containing the `design` and `response` fields.
+#' @param genes A vector of genes
+#' @param terms A vector of gene sets
+#' @return A list containing the `design`, `response`, `genes`, `terms` fields.
 #' @export
-load_data <- function(xfname, yfname, index1=T) {
+load_data <- function(xfname, yfname, genes, terms, index1=T) {
 
   X <- as.matrix(read.table(xfname, header=F))
   if (index1==F) {
-    X_sp = sparseMatrix(X[,1], X[,2], index1 = F)
+    X_sp = sparseMatrix(X[,1], X[,2], index1 = F, dims=c(length(genes), length(terms)))
   }
   else {
-    X_sp = sparseMatrix(X[,1], X[,2], index1 = T)
+    X_sp = sparseMatrix(X[,1], X[,2], index1 = T, dims=c(length(genes), length(terms)))
   }
 
   realy <- as.matrix(read.table(yfname, header=F))
-  data <-list("design"=X_sp, "response"=realy)
+  data <-list("design"=X_sp, "response"=realy, "genes"=genes, "terms"=terms)
   return(data)
 }
 

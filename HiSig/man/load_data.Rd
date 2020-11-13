@@ -4,7 +4,7 @@
 \alias{load_data}
 \title{Load data for HiSig}
 \usage{
-load_data(xfname, yfname, index1 = T)
+load_data(xfname, yfname, genes, terms, index1 = T)
 }
 \arguments{
 \item{xfname}{A two column numerical file representing a sparse matrix. The
@@ -12,9 +12,13 @@ load_data(xfname, yfname, index1 = T)
 
 \item{yfname}{A numerical file containing the observed signal (response
 variable) for genes.}
+
+\item{genes}{A vector of genes}
+
+\item{terms}{A vector of gene sets}
 }
 \value{
-A list containing the \code{design} and \code{response} fields.
+A list containing the \code{design}, \code{response}, \code{genes}, \code{terms} fields.
 }
 \description{
 This function loads the design matrix and a response vector, the components

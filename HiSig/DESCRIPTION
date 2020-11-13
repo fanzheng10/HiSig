@@ -1,12 +1,11 @@
 Package: HiSig
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Version: 0.0.9
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Fan",
+           family = "Zheng",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           email = "fanzheng1101@gmail.com")
 Description: What the package does (one paragraph).
 License: `use_mit_license()`, `use_gpl3_license()` or friends to
     pick a license
@@ -18,4 +17,5 @@ Imports:
   glmnet (>= 4.0.2),
   Matrix (>= 1.2.18),
   parallel,
-  dplyr
+  dplyr,
+  viper

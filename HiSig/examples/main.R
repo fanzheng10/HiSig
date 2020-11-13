@@ -2,7 +2,7 @@ library(HiSig)
 
 genes = readLines('target.txt')
 terms = readLines('tf.txt')
-data <- load_data('conn.txt', 'response.txt')
+data <- load_data('conn.txt', 'response.txt', genes=genes, terms=terms)
 
 hisig_out <- hisig_fit(data)
 beta_max_rand <- hisig_fit_rand(data, hisig_out$lambda, batch=100)
