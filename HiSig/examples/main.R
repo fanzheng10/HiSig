@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+
 suppressPackageStartupMessages(library(argparse))
 library(HiSig)
 
@@ -14,7 +15,7 @@ args <- parser$parse_args()
 
 genes = readLines(args$g)
 terms = readLines(args$t)
-data <- load_data(args$x, args$y, genes=genes, terms=terms)
+data <- load_data(args$x, args$y, genes, terms)
 
 hisig_out <- hisig_fit(data, nlambda=args$nlambda)
 beta_max_rand <- hisig_fit_rand(data, hisig_out$lambda, batch=args$permute/10)
