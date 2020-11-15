@@ -24,13 +24,13 @@ n_cores = min(detectCores()-1, max_cores)
 
 
 X <- as.matrix(read.table(xfname, header=F))
-# X_sp = sparseMatrix(X[,1], X[,2], index1 = F)
-X_sp = sparseMatrix(X[,1], X[,2], index1 = T)
+X_sp = sparseMatrix(X[,1], X[,2], index1 = F)
+# X_sp = sparseMatrix(X[,1], X[,2], index1 = T)
 
 realy <- as.matrix(read.table(yfname, header=F))
 
 fit <- glmnet(X_sp, realy, 
-              lambda.min = 0.0001, nlambda = 100,
+              lambda.min = 0.0001, nlambda = 500,
               standardize=F, family=family)
 
 coef = as.matrix(fit$beta)

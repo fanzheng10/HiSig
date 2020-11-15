@@ -21,7 +21,7 @@ def parse_r_output(rout, ont_conn, terms, genes, signal,
 
     coo_gene_term = np.loadtxt(ont_conn).astype(int)
     mat_gene2term = coo_matrix((np.ones(coo_gene_term.shape[0],), (coo_gene_term[:, 0], coo_gene_term[:, 1])),
-                               shape = (len(genes), len(genes) + len(terms)))
+                               )
     mat_gene2term = mat_gene2term.tocsr()
 
     gene_names = [l.strip() for l in open(genes).readlines()]
