@@ -29,7 +29,8 @@ parse_hisig <- function(data, impact, term.names, gene.names, signal2=NA, gene.a
   nterms = length(term.names)
 
   stopifnot(ngenes==length(data$response))
-  term.sizes = colSums(data$design)
+  # print(dim(data$design))
+  term.sizes = Matrix::colSums(data$design)
 
   # calculate p.values
 
