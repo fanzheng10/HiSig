@@ -6,7 +6,7 @@
 #' @return A vector containing the result.
 #' @export
 getterminfo <- function(i, design, array) {
-  info = array[which(design[, i])]
+  info = array[which(design[, i]!=0)]
   return(info)
 }
 
@@ -30,7 +30,7 @@ parse_hisig <- function(data, impact, term.names, gene.names, signal2=NA, gene.a
 
   stopifnot(ngenes==length(data$response))
   # print(dim(data$design))
-  term.sizes = Matrix::colSums(data$design)
+  term.sizes = Matrix::colSums(data$design!=0)
 
   # calculate p.values
 

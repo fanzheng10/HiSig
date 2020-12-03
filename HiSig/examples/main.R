@@ -15,7 +15,7 @@ args <- parser$parse_args()
 
 genes = readLines(args$g)
 terms = readLines(args$t)
-data <- load_data(args$x, args$y, genes, terms)
+data <- load_data(args$x, args$y, genes, terms, index1 = F)
 
 hisig_out <- hisig_fit(data, nlambda=args$nlambda)
 beta_max_rand <- hisig_fit_rand(data, hisig_out$lambda, batch=args$permute/10)

@@ -15,11 +15,12 @@
 load_data <- function(xfname, yfname, genes, terms, index1=T) {
 
   X <- as.matrix(read.table(xfname, header=F))
-  if (index1==F) {
-    X_sp = sparseMatrix(X[,1], X[,2], index1 = F, dims=c(length(genes), length(terms)))
+
+  if (dim(X)[2]==2) {
+    X_sp = sparseMatrix(i=X[,1], j=X[,2], index1 = index1, dims=c(length(genes), length(terms)))
   }
   else {
-    X_sp = sparseMatrix(X[,1], X[,2], index1 = T, dims=c(length(genes), length(terms)))
+    X_sp = sparseMatrix(i=X[,1], j=X[,2], x=X[,3], index1 = index1, dims=c(length(genes), length(terms)))
   }
 
   realy <- as.matrix(read.table(yfname, header=F))
