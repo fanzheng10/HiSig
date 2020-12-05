@@ -149,7 +149,7 @@ def feature_best_lambda(coef):
     return idy, mat_feature_argmax[idy] + (mat_feature_lambda.shape[1] -np.sum(idx))
 
 
-def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile, outf=None, save_per_patient=False, print_limit=25): # TODO: remove ont from this function (right now not used)
+def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile, outf=None, save_per_patient=False, print_limit=25):
     '''
     to estimate number of samples mutated by each system
     :param ont: an Ontology object
@@ -214,7 +214,7 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
 
     records_gene_in_system_count_inferred = []
     for t in dict_gene_in_system_count_inferred.keys():
-        for g, v in dict_gene_in_system_count_inferred[t].iteritems():
+        for g, v in dict_gene_in_system_count_inferred[t].items():
             records_gene_in_system_count_inferred.append((ont.genes[g], t, v))
 
     df_gene_in_system_count_inferred = pd.DataFrame.from_records(records_gene_in_system_count_inferred,

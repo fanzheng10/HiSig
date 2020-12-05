@@ -12,7 +12,7 @@
 #' @param terms A vector of gene sets
 #' @return A list containing the `design`, `response`, `genes`, `terms` fields.
 #' @export
-load_data <- function(xfname, yfname, genes, terms, index1=T) {
+load_data <- function(xfname, yfname, genes, terms, index1=T) { #TODO: making genes and terms accept file names too
 
   X <- as.matrix(read.table(xfname, header=F))
 
