@@ -17,7 +17,7 @@ load_data <- function(xfname, yfname, genes, terms, index1=T) { #TODO: making ge
   X <- as.matrix(read.table(xfname, header=F))
 
   if (dim(X)[2]==2) {
-    X_sp = sparseMatrix(i=X[,1], j=X[,2], index1 = index1, dims=c(length(genes), length(terms)))
+    X_sp = sparseMatrix(i=X[,1], j=X[,2], x=rep(1, dim(X)[1]), index1 = index1, dims=c(length(genes), length(terms)))
   }
   else {
     X_sp = sparseMatrix(i=X[,1], j=X[,2], x=X[,3], index1 = index1, dims=c(length(genes), length(terms)))

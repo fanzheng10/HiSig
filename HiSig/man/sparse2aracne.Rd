@@ -2,9 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{sparse2aracne}
 \alias{sparse2aracne}
-\title{convert the regulon from sparse matrix format to the aracne/viper format}
+\title{convert the regulon from sparse matrix format to the Aracne/Viper format}
 \usage{
-sparse2aracne(data, out)
+sparse2aracne(data)
 }
 \arguments{
 \item{data}{The object created by the 'load_data' function}
@@ -12,8 +12,8 @@ sparse2aracne(data, out)
 \item{design}{The output file name}
 }
 \value{
-NA
+regulon A regulon object in viper package
 }
 \description{
-convert the regulon from sparse matrix format to the aracne/viper format
+convert the regulon from sparse matrix format to the Aracne/Viper format
 }

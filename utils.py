@@ -149,7 +149,7 @@ def feature_best_lambda(coef):
     return idy, mat_feature_argmax[idy] + (mat_feature_lambda.shape[1] -np.sum(idx))
 
 
-def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, tumor_profile, outf=None, save_per_patient=False, print_limit=25):
+def estimate_nsamples_per_term(conn, coef_adjust, gene_names, term_names, term_best_lambda, tumor_profile, outf=None, save_per_patient=False, print_limit=25):
     '''
     to estimate number of samples mutated by each system
     :param ont: an Ontology object
@@ -165,24 +165,25 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
     df_terms_sub = pd.DataFrame(index=term_names)
     dict_gene_in_system_count_inferred = {t: {} for t in term_names}
 
+    df_coo_gene_feature = pd.read_csv(conn, sep='\t', header=None)
+
     for i in range(len(tumor_profile.columns.tolist())):
         tumid = tumor_profile.columns.tolist()[i]
         genes_mutated_in_sample = [g for g in tumor_profile[tumor_profile[tumid].notnull()].index.tolist() if
-                                   g in ont.genes]
+                                   g in gene_names]
         for j in range(len(term_names)):
             term_name = term_names[j]
-            term_id = ont.terms.index(term_name)  # later may change this to the terms that are actually used
-            # lam = term_best_lambda[term_id + len(ont.genes)]
-            if not term_id + len(ont.genes) in term_best_lambda:
+            term_id = j + len(gene_names)  # later may change this to the terms that are actually used
+            if not term_id in term_best_lambda:
                 continue
-            lam = term_best_lambda[term_id + len(ont.genes)]
+            lam = term_best_lambda[term_id]
             coef_adjust_i = coef_adjust[lam]  # [n_genes, n_system] rescaled beta matrix
             df_coef_adjust = pd.DataFrame.from_dict(
                 {'gene': coef_adjust_i[0], 'feature': coef_adjust_i[1], 'weight': coef_adjust_i[2]})
             df_coef_adjust['weight'] = df_coef_adjust['weight'].round(6)
 
-            gene_ids_in_term = ont.term_2_gene[term_name]
-            genes_hit = [g for g in gene_ids_in_term if ont.genes[g] in genes_mutated_in_sample]
+            gene_ids_in_term = np.array(df_coo_gene_feature.loc[df_coo_gene_feature[1]==term_id, 0])
+            genes_hit = [g for g in gene_ids_in_term if gene_names[g] in genes_mutated_in_sample]
             multiplicon = 1
             for g in genes_hit:
                 if (not g in dict_gene_in_system_count_inferred[term_name]):
@@ -196,7 +197,7 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
                     # break
                 else:
                     p_gt = np.array(
-                        df_coef_adjust_g.loc[df_coef_adjust_g['feature'] == (len(ont.genes) + term_id), 'weight'])
+                        df_coef_adjust_g.loc[df_coef_adjust_g['feature'] == term_id, 'weight'])
                     if len(p_gt) == 0:
                         continue
                     p_gt[0] = min(1.0, p_gt[0])
@@ -215,7 +216,7 @@ def estimate_nsamples_per_term(ont, coef_adjust, term_names, term_best_lambda, t
     records_gene_in_system_count_inferred = []
     for t in dict_gene_in_system_count_inferred.keys():
         for g, v in dict_gene_in_system_count_inferred[t].items():
-            records_gene_in_system_count_inferred.append((ont.genes[g], t, v))
+            records_gene_in_system_count_inferred.append((gene_names[g], t, v))
 
     df_gene_in_system_count_inferred = pd.DataFrame.from_records(records_gene_in_system_count_inferred,
                                                                  columns=['gene', 'term', 'weight'])

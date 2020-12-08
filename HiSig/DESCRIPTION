@@ -1,6 +1,6 @@
 Package: HiSig
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.9
+Version: 0.0.10
 Authors@R: 
     person(given = "Fan",
            family = "Zheng",
