@@ -6,8 +6,12 @@
 sparse2aracne <- function(data) {
   X_sp <- which(as.matrix(data$design != 0), arr.ind = T)
   regulon = list()
+  terms_used =c()
   for (i in 1:length(data$terms)) {
     target_ids = X_sp[X_sp[,2] == i,1]
+    if (length(target_ids) ==0) {
+      next
+    }
     targets = data$genes[target_ids]
 
     spm_ids = which(X_sp[,2] ==i) # ids in the sparse matrix
@@ -24,8 +28,9 @@ sparse2aracne <- function(data) {
     # else {
     #   write(line, file=out, append=T)
     # }
-    regulon[[i]] <- regul_element
+    regulon[[length(regulon) +1]] <- regul_element
+    terms_used = c(terms_used, data$terms[i])
   }
-  names(regulon) <- data$terms
+  names(regulon) <- terms_used
   return(regulon)
 }
