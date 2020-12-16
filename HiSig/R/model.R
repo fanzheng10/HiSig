@@ -157,13 +157,15 @@ hisig_fit_ms <- function(data,
     data_s <- data
     if (random) {
       if (shuffle.row) {
-        data_s$response <- data_s$response[sample(nrow(data_s$response)), ]
+        data_s$response <- data_s$response[sample(nrow(data_s$response), size=batch_size), ]
       }
       else {
-        data_s$response <- data_s$response[,sample(ncol(data_s$response))]
+        data_s$response <- data_s$response[,sample(ncol(data_s$response), size=batch_size)]
       }
     }
-    data_s$response = data$response[,((i-1)*batch_size+1):min(i*batch_size, nsample)]
+    else {
+        data_s$response = data$response[,((i-1)*batch_size+1):min(i*batch_size, nsample)]
+    }
     beta_max_all <- mclapply(1:batch_size, hisig_fit, data = data_s,
                              lambda.min=lambda.min, nlambda=nlambda, pos.only = pos.only,simple.output=T,
                              mc.cores=n_cores, mc.cleanup=TRUE)
