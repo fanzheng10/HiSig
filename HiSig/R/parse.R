@@ -97,6 +97,22 @@ parse_hisig <- function(data, impact, term.names, gene.names, signal2=NA, gene.a
   return(df)
 }
 
+#' Parse HiSig results multi-sample mode
+#' #'
+#' @param beta_sample a matrix (No. regulons)
+#' @param beta_null The impact matrix; 1st column being the main fit; 2nd column to the end being the null model.
+#' @return two dataframes (No. regulons x No. samples). The first one for normalized scores, and the second one for q values. The normalized scores may contain 'NA'.
+parse_hisig_ms <- function(beta_sample, beta_null) {
+  nsample = dim(beta_sample)[2]
+  npermute = dim(beta_null)[2]
+  p.vals <- sapply(1:nsample,
+                   function(x) {rowSums(beta_null > beta_sample[,x])/npermute})
+  q.vals <- sapply(1:nsample,
+                   function(x) {p.adjust(pval[,x], metho='BH')}) # TODO: think about it
+  nes <- sapply(1:nsample,
+                function(x) {npermute * beta_sample[,1]/rowSums(beta_null)})
+  return(list(nes, q.vals))
+}
 
 #' Save the dataframe.
 #'

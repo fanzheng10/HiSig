@@ -126,7 +126,7 @@ hisig_fit_rand <- function(data, lambda, batch=10, batch_size=10, n_cores=detect
   return(beta_max_combined)
 }
 
-#' Create the HiSig null model with glmnet.
+#' Create the HiSig model (multi-sample mode) with glmnet. Can be used to process both real and permuted data.
 #'
 #' @param data A named list containing `design` and `response`.
 #' @param lambda.min See `hisig_fit`.
