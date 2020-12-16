@@ -9,19 +9,22 @@ hisig_fit_rand(
   lambda,
   batch = 10,
   batch_size = 10,
-  n_cores = detectCores() - 1
+  n_cores = detectCores() - 1,
+  pos.only = F
 )
 }
 \arguments{
 \item{data}{A named list containing \code{design} and \code{response}.}
 
-\item{lambda}{An vector of lambda determined by the main fit.}
+\item{lambda}{An vector of lambda determined by the main fit. Argument passed to \code{hisig_fit}.}
 
 \item{batch}{Parameter of parallelization. The total number of permutatoin is \code{batch*batch_size}.}
 
-\item{batch_size}{Parameter of parallelization}
+\item{batch_size}{Parameter of parallelization.}
 
-\item{n_cores}{Number of cores to use for parallelization}
+\item{n_cores}{Number of cores to use for parallelization.}
+
+\item{pos.only}{whether restrict to non-negative coefficient, Argument passed to \code{hisig_fit}.}
 }
 \value{
 A matrix to quantify the impact of gene sets under the null model.

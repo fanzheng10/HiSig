@@ -55,22 +55,29 @@ hisig_fit <- function(data,
                       nlambda = 100,
                       pos.only = F,
                       lambda = NULL,
-                      random = F) {
+                      random = F,
+                      simple.output=F) {
   if (pos.only == F) {
     lower.limits = -Inf
   }
   else {
     lower.limits = 0
   }
+  if (dim(data$response)[2] == 1) {
+    response <- data$response
+  }
+  else {
+    response <- as.matrix(data$response[,dummy])
+  }
   if (random) {
     stopifnot(is.null(lambda) == F)
-    data$response <- sample(data$response)
-    fit <- glmnet(data$design, data$response, lower.limits = lower.limits,
+    response <- sample(response)
+    fit <- glmnet(data$design, response, lower.limits = lower.limits,
                   lambda = lambda,
                   standardize=F, family='gaussian')
   }
   else {
-    fit <- glmnet(data$design, data$response, lower.limits = lower.limits,
+    fit <- glmnet(data$design, response, lower.limits = lower.limits,
                   lambda.min.ratio=lambda.min, nlambda=nlambda,
                   standardize=F, family='gaussian')
   }
@@ -83,7 +90,7 @@ hisig_fit <- function(data,
   norm_beta = scale(coef1, center=FALSE, scale=colSums(coef1) + abs(fit$a0[colSums(coef) >0]))
   beta_max = apply(norm_beta, 1, max)
 
-  if (random) {
+  if (simple.output) {
     return(beta_max)
   }
   else {
@@ -95,20 +102,76 @@ hisig_fit <- function(data,
 #' Create the HiSig null model with glmnet.
 #'
 #' @param data A named list containing `design` and `response`.
-#' @param lambda An vector of lambda determined by the main fit.
-#' @param batch Parameter of parallelization. The total number of permutatoin is `batch*batch_size`.
-#' @param batch_size Parameter of parallelization
-#' @param n_cores Number of cores to use for parallelization
+#' @param lambda An vector of lambda determined by the main fit. Argument passed to `hisig_fit`.
+#' @param batch Parameter of parallelization. The total number of permutation is `batch*batch_size`.
+#' @param batch_size Parameter of parallelization.
+#' @param pos.only whether restrict to non-negative coefficient, Argument passed to `hisig_fit`.
+#' @param n_cores Number of cores to use for parallelization.
 #' @return A matrix to quantify the impact of gene sets under the null model.
 #' @export
-hisig_fit_rand <- function(data, lambda, batch=10, batch_size=10, n_cores=detectCores()-1) {
+hisig_fit_rand <- function(data, lambda, batch=10, batch_size=10, n_cores=detectCores()-1,
+                           pos.only=F) {
   for (i in 1:batch) {
-    beta_max_all <- mclapply(1:batch_size, hisig_fit, data = data, lambda=lambda, random=T, mc.cores=n_cores, mc.cleanup=TRUE)
+    beta_max_all <- mclapply(1:batch_size, hisig_fit, data = data,
+                             lambda=lambda, pos.only = pos.only, random=T,simple.output=T,
+                             mc.cores=n_cores, mc.cleanup=TRUE)
     if (i == 1) {
       beta_max_combined = as.data.frame(beta_max_all)
     }
     else {
-      beta_max_combined = cbind(beta_max_combined, as.data.frame(beta_max_all))
+      beta_max_combined = cbind(beta_max_combined, as.data.frame(beta_max_all)) #TODO: this can be changed to apply
+    }
+  }
+  names(beta_max_combined) = 1:(batch*batch_size)
+  return(beta_max_combined)
+}
+
+#' Create the HiSig model (multi-sample mode) with glmnet. Can be used to process both real and permuted data.
+#'
+#' @param data A named list containing `design` and `response`.
+#' @param lambda.min See `hisig_fit`.
+#' @param lambda See `hisig_fit`.
+#' @param pos.only See `hisig_fit`.
+#' @param batch In this function, if `random=F`, the number of batches is determined by the sample size. Otheriwse, same as `hisig_fit_rand`.
+#' @param batch_size See `hisig_fit_rand`.
+#' @param n_cores See `hisig_fit_rand`.
+#' @param random If true, shuffle the input response vector
+#' @param shuffle.row Whether shuffle row (gene labels) when creating null distribution. Default is False, i.e. shuffle the sample label, which is consistent with `msviper`
+#' @return A matrix to quantify the impact of gene sets.
+#' @export
+hisig_fit_ms <- function(data,
+                         lambda.min = 0.0001,
+                         nlambda = 100,
+                         pos.only = F,
+                         lambda = NULL,
+                         random=F,
+                         shuffle.row=F, # default is to shuffle column (i.e. shuffle the sample label)
+                         batch=10, # only effective for generating null model
+                         batch_size=10, n_cores=detectCores()-1) {
+  nsample = dim(data$response)[2]
+  if (random==F) {
+    batch = ceiling(nsample/batch_size)
+  }
+  for (i in 1:batch) {
+
+    data_s <- data
+    if (random) {
+      if (shuffle.row) {
+        data_s$response <- data_s$response[sample(nrow(data_s$response)), ]
+      }
+      else {
+        data_s$response <- data_s$response[,sample(ncol(data_s$response))]
+      }
+    }
+    data_s$response = data$response[,((i-1)*batch_size+1):min(i*batch_size, nsample)]
+    beta_max_all <- mclapply(1:batch_size, hisig_fit, data = data_s,
+                             lambda.min=lambda.min, nlambda=nlambda, pos.only = pos.only,simple.output=T,
+                             mc.cores=n_cores, mc.cleanup=TRUE)
+    if (i == 1) {
+      beta_max_combined = as.data.frame(beta_max_all)
+    }
+    else {
+      beta_max_combined = cbind(beta_max_combined, as.data.frame(beta_max_all)) #TODO: this can be changed to apply
     }
   }
   names(beta_max_combined) = 1:(batch*batch_size)

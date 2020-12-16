@@ -2,6 +2,7 @@
 
 export(getterminfo)
 export(hisig_fit)
+export(hisig_fit_ms)
 export(hisig_fit_rand)
 export(load_data)
 export(output)
