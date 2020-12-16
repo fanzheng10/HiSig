@@ -1,6 +1,6 @@
 Package: HiSig
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.10
+Version: 0.1
 Authors@R: 
     person(given = "Fan",
            family = "Zheng",
@@ -14,7 +14,7 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends:
-  glmnet (>= 4.0.2),
+  glmnet (>= 2.0.0),
   Matrix (>= 1.2.18),
   parallel,
   dplyr
