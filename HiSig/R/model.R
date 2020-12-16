@@ -103,7 +103,7 @@ hisig_fit <- function(data,
 #'
 #' @param data A named list containing `design` and `response`.
 #' @param lambda An vector of lambda determined by the main fit. Argument passed to `hisig_fit`.
-#' @param batch Parameter of parallelization. The total number of permutatoin is `batch*batch_size`.
+#' @param batch Parameter of parallelization. The total number of permutation is `batch*batch_size`.
 #' @param batch_size Parameter of parallelization.
 #' @param pos.only whether restrict to non-negative coefficient, Argument passed to `hisig_fit`.
 #' @param n_cores Number of cores to use for parallelization.
@@ -132,7 +132,7 @@ hisig_fit_rand <- function(data, lambda, batch=10, batch_size=10, n_cores=detect
 #' @param lambda.min See `hisig_fit`.
 #' @param lambda See `hisig_fit`.
 #' @param pos.only See `hisig_fit`.
-#' @param batch See `hisig_fit_rand`.
+#' @param batch In this function, if `random=F`, the number of batches is determined by the sample size. Otheriwse, same as `hisig_fit_rand`.
 #' @param batch_size See `hisig_fit_rand`.
 #' @param n_cores See `hisig_fit_rand`.
 #' @param random If true, shuffle the input response vector
@@ -146,7 +146,12 @@ hisig_fit_ms <- function(data,
                          lambda = NULL,
                          random=F,
                          shuffle.row=F, # default is to shuffle column (i.e. shuffle the sample label)
-                         batch=10, batch_size=10, n_cores=detectCores()-1) {
+                         batch=10, # only effective for generating null model
+                         batch_size=10, n_cores=detectCores()-1) {
+  nsample = dim(data$response)[2]
+  if (random==F) {
+    batch = ceiling(nsample/batch_size)
+  }
   for (i in 1:batch) {
 
     data_s <- data
@@ -158,7 +163,7 @@ hisig_fit_ms <- function(data,
         data_s$response <- data_s$response[,sample(ncol(data_s$response))]
       }
     }
-    data_s$response = data$response[,((i-1)*batch_size+1):(i*batch_size)]
+    data_s$response = data$response[,((i-1)*batch_size+1):min(i*batch_size, nsample)]
     beta_max_all <- mclapply(1:batch_size, hisig_fit, data = data_s,
                              lambda.min=lambda.min, nlambda=nlambda, pos.only = pos.only,simple.output=T,
                              mc.cores=n_cores, mc.cleanup=TRUE)
