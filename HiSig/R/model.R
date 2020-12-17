@@ -154,7 +154,7 @@ hisig_fit_ms <- function(data,
     batch = ceiling(nsample/batch_size)
   }
   else {
-    data_rand$response = apply(data_rand$response, 1, sample)
+    data_rand$response = t(apply(data$response, 1, sample))
   }
   for (i in 1:batch) {
 
@@ -165,7 +165,7 @@ hisig_fit_ms <- function(data,
       data_s$response = data$response[,((i-1)*batch_size+1):min(i*batch_size, nsample)]
     }
     beta_max_all <- mclapply(1:batch_size, hisig_fit, data = data_s,
-                             lambda.min=lambda.min, nlambda=nlambda, pos.only = pos.only,simple.output=T,
+                             lambda.min=lambda.min, nlambda=nlambda, pos.only = pos.only, simple.output=T,
                              mc.cores=n_cores, mc.cleanup=TRUE)
     if (i == 1) {
       beta_max_combined = as.data.frame(beta_max_all)
