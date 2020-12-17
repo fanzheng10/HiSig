@@ -105,7 +105,7 @@ parse_hisig <- function(data, impact, term.names, gene.names, signal2=NA, gene.a
 #' @export
 parse_hisig_ms <- function(beta_sample, beta_null) {
   nsample = ncol(beta_sample)
-  npermute = nocl(beta_null)
+  npermute = ncol(beta_null)
   p.vals <- sapply(1:nsample,
                    function(x) {rowSums(beta_null >= beta_sample[,x])/npermute})
   q.vals <- sapply(1:nsample,
