@@ -28,5 +28,5 @@ row.names(result_ms[[2]]) = terms
 result_ms[[1]] = round(result_ms[[1]],4)
 result_ms[[2]] = round(result_ms[[2]],4)
 
-write.table(result_ms[[1]], file=paste0(args$out, '_nes.txt'), quote=F, sep='\t', col.names = F)
-write.table(result_ms[[2]], file=paste0(args$our, '_q.txt'), quote=F, sep='\t', col.names = F )
+write.table(result_ms[[1]], file=paste0(args$o, '_nes.txt'), quote=F, sep='\t', col.names = F)
+write.table(result_ms[[2]], file=paste0(args$o, '_q.txt'), quote=F, sep='\t', col.names = F )

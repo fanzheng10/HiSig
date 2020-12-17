@@ -7,12 +7,12 @@
 parse_hisig_ms(beta_sample, beta_null)
 }
 \arguments{
-\item{beta_sample}{a matrix (No. regulons)}
+\item{beta_sample}{An impact matrix (No. regulons x No. samples)}
 
-\item{beta_null}{The impact matrix; 1st column being the main fit; 2nd column to the end being the null model.}
+\item{beta_null}{An impact matrix (No. r)}
 }
 \value{
-two dataframes (No. regulons x No. samples). The first one for normalized scores, and the second one for q values. The normalized scores may contain 'NA'.
+Two dataframes (No. regulons x No. samples). The first one for normalized scores, and the second one for q values. The normalized scores may contain 'NA'.
 }
 \description{
 Parse HiSig results multi-sample mode

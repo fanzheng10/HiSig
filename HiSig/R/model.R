@@ -16,7 +16,7 @@ load_data <- function(xfname, yfname, genes, terms, index1=T) { #TODO: making ge
 
   X <- as.matrix(read.table(xfname, header=F))
 
-  if (dim(X)[2]==2) {
+  if (ncol(X)==2) {
     X_sp = sparseMatrix(i=X[,1], j=X[,2], x=rep(1, dim(X)[1]), index1 = index1, dims=c(length(genes), length(terms)))
   }
   else {
@@ -63,7 +63,7 @@ hisig_fit <- function(data,
   else {
     lower.limits = 0
   }
-  if (dim(data$response)[2] == 1) {
+  if (ncol(data$response) == 1) {
     response <- data$response
   }
   else {
@@ -136,7 +136,6 @@ hisig_fit_rand <- function(data, lambda, batch=10, batch_size=10, n_cores=detect
 #' @param batch_size See `hisig_fit_rand`.
 #' @param n_cores See `hisig_fit_rand`.
 #' @param random If true, shuffle the input response vector
-#' @param shuffle.row Whether shuffle row (gene labels) when creating null distribution. Default is False, i.e. shuffle the sample label, which is consistent with `msviper`
 #' @return A matrix to quantify the impact of gene sets.
 #' @export
 hisig_fit_ms <- function(data,
@@ -145,26 +144,25 @@ hisig_fit_ms <- function(data,
                          pos.only = F,
                          lambda = NULL,
                          random=F,
-                         shuffle.row=F, # default is to shuffle column (i.e. shuffle the sample label)
+                         # shuffle.row=F, # default is to shuffle column (i.e. shuffle the sample label)
                          batch=10, # only effective for generating null model
                          batch_size=10, n_cores=detectCores()-1) {
-  nsample = dim(data$response)[2]
+  nsample = ncol(data$response)
+  data_s <- data
+  data_rand <- data
   if (random==F) {
     batch = ceiling(nsample/batch_size)
   }
+  else {
+    data_rand$response = apply(data_rand$response, 1, sample)
+  }
   for (i in 1:batch) {
 
-    data_s <- data
     if (random) {
-      if (shuffle.row) {
-        data_s$response <- data_s$response[sample(nrow(data_s$response), size=batch_size), ]
-      }
-      else {
-        data_s$response <- data_s$response[,sample(ncol(data_s$response), size=batch_size)]
-      }
+      data_s$response <- data_rand$response[,sample(ncol(data_rand$response), batch_size)]
     }
     else {
-        data_s$response = data$response[,((i-1)*batch_size+1):min(i*batch_size, nsample)]
+      data_s$response = data$response[,((i-1)*batch_size+1):min(i*batch_size, nsample)]
     }
     beta_max_all <- mclapply(1:batch_size, hisig_fit, data = data_s,
                              lambda.min=lambda.min, nlambda=nlambda, pos.only = pos.only,simple.output=T,

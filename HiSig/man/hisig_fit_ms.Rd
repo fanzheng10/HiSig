@@ -11,7 +11,6 @@ hisig_fit_ms(
   pos.only = F,
   lambda = NULL,
   random = F,
-  shuffle.row = F,
   batch = 10,
   batch_size = 10,
   n_cores = detectCores() - 1
@@ -27,8 +26,6 @@ hisig_fit_ms(
 \item{lambda}{See \code{hisig_fit}.}
 
 \item{random}{If true, shuffle the input response vector}
-
-\item{shuffle.row}{Whether shuffle row (gene labels) when creating null distribution. Default is False, i.e. shuffle the sample label, which is consistent with \code{msviper}}
 
 \item{batch}{In this function, if \code{random=F}, the number of batches is determined by the sample size. Otheriwse, same as \code{hisig_fit_rand}.}
 
