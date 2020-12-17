@@ -2,11 +2,11 @@
 % Please edit documentation in R/model.R
 \name{hisig_fit_ms}
 \alias{hisig_fit_ms}
-\title{Create the HiSig null model with glmnet.}
+\title{Create the HiSig model (multi-sample mode) with glmnet. Can be used to process both real and permuted data.}
 \usage{
 hisig_fit_ms(
   data,
-  lambda.min = 1e-04,
+  lambda.min = 0.0001,
   nlambda = 100,
   pos.only = F,
   lambda = NULL,
@@ -30,7 +30,7 @@ hisig_fit_ms(
 
 \item{shuffle.row}{Whether shuffle row (gene labels) when creating null distribution. Default is False, i.e. shuffle the sample label, which is consistent with \code{msviper}}
 
-\item{batch}{See \code{hisig_fit_rand}.}
+\item{batch}{In this function, if \code{random=F}, the number of batches is determined by the sample size. Otheriwse, same as \code{hisig_fit_rand}.}
 
 \item{batch_size}{See \code{hisig_fit_rand}.}
 
@@ -40,5 +40,5 @@ hisig_fit_ms(
 A matrix to quantify the impact of gene sets.
 }
 \description{
-Create the HiSig null model with glmnet.
+Create the HiSig model (multi-sample mode) with glmnet. Can be used to process both real and permuted data.
 }

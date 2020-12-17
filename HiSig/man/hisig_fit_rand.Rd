@@ -18,7 +18,7 @@ hisig_fit_rand(
 
 \item{lambda}{An vector of lambda determined by the main fit. Argument passed to \code{hisig_fit}.}
 
-\item{batch}{Parameter of parallelization. The total number of permutatoin is \code{batch*batch_size}.}
+\item{batch}{Parameter of parallelization. The total number of permutation is \code{batch*batch_size}.}
 
 \item{batch_size}{Parameter of parallelization.}
 
