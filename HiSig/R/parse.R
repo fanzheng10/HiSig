@@ -109,7 +109,7 @@ parse_hisig_ms <- function(beta_sample, beta_null) {
   p.vals <- sapply(1:nsample,
                    function(x) {rowSums(beta_null >= beta_sample[,x])/npermute})
   q.vals <- sapply(1:nsample,
-                   function(x) {p.adjust(p.vals[,x], metho='BH')}) # TODO: think about it
+                   function(x) {p.adjust(p.vals[,x], method ='BH')}) # TODO: think about it
   nes <- sapply(1:nsample,
                 function(x) {npermute * beta_sample[,x]/rowSums(beta_null)})
   return(list(nes, q.vals))

@@ -153,12 +153,10 @@ hisig_fit_ms <- function(data,
   if (random==F) {
     batch = ceiling(nsample/batch_size)
   }
-  else {
-    data_rand$response = t(apply(data$response, 1, sample))
-  }
   for (i in 1:batch) {
 
     if (random) {
+      data_rand$response = t(apply(data$response, 1, sample))
       data_s$response <- data_rand$response[,sample(ncol(data_rand$response), batch_size)]
     }
     else {
