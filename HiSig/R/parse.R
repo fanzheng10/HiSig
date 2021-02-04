@@ -48,7 +48,6 @@ parse_hisig <- function(data, impact, term.names, gene.names, signal2=NA, gene.a
     df = df[(ngenes+1):dim(impact)[1], ]
   }
   df$System.names = term.names
-  df$No.genes = term.sizes
   nsys = dim(df)[1]
 
   # list the genes in the systems
@@ -58,6 +57,7 @@ parse_hisig <- function(data, impact, term.names, gene.names, signal2=NA, gene.a
     genesets = lapply(1:nsys, getterminfo, data$design[,(ngenes+1):dim(impact)[1]], gene.names)
     generanks = lapply(1:nsys, getterminfo, data$design[,(ngenes+1):dim(impact)[1]], allranks)
     signal1 = lapply(1:nsys, getterminfo, data$design[,(ngenes+1):dim(impact)[1]], data$response)
+    term.sizes = term.sizes[,(ngenes+1):dim(impact)[1]]
   }
   else {
     genesets = lapply(1:nsys, getterminfo, data$design, gene.names)
@@ -74,6 +74,7 @@ parse_hisig <- function(data, impact, term.names, gene.names, signal2=NA, gene.a
   generanks_sorted = as.character(lapply(generanks_sorted, function(x) paste(x[1:showedge][is.na(x[1:showedge])==F], collapse = '|')))
   signal1_sorted = as.character(lapply(signal1_sorted, function(x) paste(x[1:showedge][is.na(x[1:showedge])==F], collapse='|')))
 
+  df$No.genes = term.sizes
   df$Genes = genesets_sorted
   df$Gene.ranks = generanks_sorted
   df$Signal = signal1_sorted
