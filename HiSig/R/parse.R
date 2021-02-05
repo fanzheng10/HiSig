@@ -57,7 +57,7 @@ parse_hisig <- function(data, impact, term.names, gene.names, signal2=NA, gene.a
     genesets = lapply(1:nsys, getterminfo, data$design[,(ngenes+1):dim(impact)[1]], gene.names)
     generanks = lapply(1:nsys, getterminfo, data$design[,(ngenes+1):dim(impact)[1]], allranks)
     signal1 = lapply(1:nsys, getterminfo, data$design[,(ngenes+1):dim(impact)[1]], data$response)
-    term.sizes = term.sizes[,(ngenes+1):dim(impact)[1]]
+    term.sizes = term.sizes[(ngenes+1):dim(impact)[1]]
   }
   else {
     genesets = lapply(1:nsys, getterminfo, data$design, gene.names)
