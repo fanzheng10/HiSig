@@ -10,18 +10,25 @@
 #'   variable) for genes.
 #' @param genes A vector of genes
 #' @param terms A vector of gene sets
+#' @param gene.as.term if the design matrix sees individual gene as a gene set, set it to TRUE to correctly compute statistics. Default is FALSE.
 #' @return A list containing the `design`, `response`, `genes`, `terms` fields.
 #' @export
-load_data <- function(xfname, yfname, genes, terms, index1=T) { #TODO: making genes and terms accept file names too
+load_data <- function(xfname, yfname, genes, terms, index1=T, gene.as.term=F) { #TODO: making genes and terms accept file names too
 
   X <- as.matrix(read.table(xfname, header=F))
-
-  if (ncol(X)==2) {
-    X_sp = sparseMatrix(i=X[,1], j=X[,2], x=rep(1, dim(X)[1]), index1 = index1, dims=c(length(genes), length(terms)))
+  if (gene.as.term) {
+    dim2 = length(genes) + length(terms)
   }
   else {
-    X_sp = sparseMatrix(i=X[,1], j=X[,2], x=X[,3], index1 = index1, dims=c(length(genes), length(terms)))
+    dim2 = length(terms)
   }
+  if (ncol(X)==2) {
+    X_sp = sparseMatrix(i=X[,1], j=X[,2], x=rep(1, dim(X)[1]), index1 = index1, dims=c(length(genes), dim2))
+  }
+  else {
+    X_sp = sparseMatrix(i=X[,1], j=X[,2], x=X[,3], index1 = index1, dims=c(length(genes), dim2))
+  }
+
 
   realy <- as.matrix(read.table(yfname, header=F))
   data <-list("design"=X_sp, "response"=realy, "genes"=genes, "terms"=terms)
