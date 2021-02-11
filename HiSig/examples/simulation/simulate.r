@@ -3,13 +3,13 @@ library(optparse)
 
 option_list = list( # don't use R -f, but Rscript
   make_option(c("-n", "--nlayer"),
-              type="integer", default=4),
+              type="integer", default=2),
   make_option(c("-m", "--size_per_layer"),
-              type="integer", default=5),
+              type="integer", default=4),
   make_option(c("-p", "--prob_pos"),
                 type="double", default=0.1),
-  make_option(c("--log"), action='store_true'), # only applies when simulating poission distribution
-  make_option(c('--gaussian'), action='store_true') # if true, will simulate Gaussian distribution (with positive and negative)
+  make_option(c("--log"), action='store_true', default=FALSE), # only applies when simulating poission distribution
+  make_option(c('--gaussian'), action='store_true', default=FALSE) # if true, will simulate Gaussian distribution (with positive and negative)
 );
 
 opt_parser = OptionParser(option_list=option_list);
@@ -26,12 +26,12 @@ p = opt$prob_pos
 # layer_names = paste0('L', 1:nlayers)
 # p = 0.2
 
-if (opt$gaussian) {
+if (opt$gaussian==T) {
   hier_data <-
     fabricate(
       L = add_level(
         N = M[[1]],
-        select = sample(c(draw_binary(prob=p, N=N/2), -1*draw_binary(prob=p, N=N/2)))
+        select = sample(c(draw_binary(prob=p, N=floor(N/2)), -1*draw_binary(prob=p, N=ceiling(N/2))))
       )
     )
 } else {
@@ -53,14 +53,16 @@ for (x in 2:nlayers) {
   if (opt$gaussian) {
     hier_data <-
       fabricate(
+        data = hier_data,
         L = add_level(
           N = M[[1]],
-          select = sample(c(draw_binary(prob=p, N=N/2), -1*draw_binary(prob=p, N=N/2)))
+          select = sample(c(draw_binary(prob=p, N=floor(N/2)), -1*draw_binary(prob=p, N=ceiling(N/2))))
         )
       )
   } else {
     hier_data <-
       fabricate(
+        data = hier_data,
         L = add_level(
           N = M[[1]],
           select = draw_binary(prob=p, N=N)
