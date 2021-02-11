@@ -31,12 +31,12 @@ g_score_sort <- g_score[order(g_score$V1, decreasing = T),]
 cal.ks <- function(i, S) {
   r = g_score_sort
   rownames(r) = r$gene
-  NR = sum(r[S,]$V1) # here assume input are non-negative
+  NR = sum(abs(r[S,]$V1)) # here assume input are non-negative
   r_edge = r[1:i,]
   r_hit = r_edge[r_edge$gene %in% S, ]
   n_hit = dim(r_hit)[1]
   n_miss = i - n_hit
-  rj = sum(r_hit$V1)
+  rj = sum(abs(r_hit$V1))
   Phit = rj/NR
   N = dim(r)[1]
   NH = length(S)
