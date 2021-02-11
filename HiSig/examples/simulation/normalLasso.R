@@ -1,6 +1,6 @@
 library(glmnet)
 
-setwd("~/Desktop/UCSD_Research/2021/hisig_paper/N3_m5_p0.3_1")
+# setwd("~/Desktop/UCSD_Research/2021/hisig_paper/N3_m5_p0.3_1")
 
 realy <- as.matrix(read.table('genescore.tsv', header=F))
 
