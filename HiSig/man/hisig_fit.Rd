@@ -7,7 +7,7 @@
 hisig_fit(
   data,
   dummy = 1,
-  lambda.min = 0.0001,
+  lambda.min = 1e-04,
   nlambda = 100,
   pos.only = F,
   lambda = NULL,
