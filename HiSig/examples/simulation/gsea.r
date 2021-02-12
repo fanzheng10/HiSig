@@ -68,8 +68,8 @@ cal.p <- function(i) {
   ES = calES(s)
   size = length(s)
   size_ind = which(tsize_uniq == size)
-  print(size)
-  print(size_ind)
+  # print(size)
+  # print(size_ind)
   ESnull <- null_ES[[size_ind]]
   return(mean(ESnull > ES))
 }

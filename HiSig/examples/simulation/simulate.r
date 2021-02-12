@@ -117,6 +117,19 @@ write.conn<-function(nlayers) {
   writeLines(X, filecon)
   close(filecon)
 
+  # write conn without id matrix
+  outf = 'sim_conn_noid.txt'
+  X <-c()
+  for (i in 1:(nlayers-1)) {
+    coln = paste0('L', i)
+    x = match( paste0('L', i, '_', hier_data[[coln]]), clust_names) -1
+    x = paste0(1:nrow(hier_data)-1, "\t", x)
+    X <-c(X, x)
+  }
+  filecon <- file(outf)
+  writeLines(X, filecon)
+  close(filecon)
+
   # write terms
   outf = 'terms.txt'
   filecon <- file(outf)
