@@ -11,8 +11,8 @@ parser$add_argument("--s", required=T, help="the system list")
 parser$add_argument("--o", required=T, help="the output name")
 parser$add_argument('--permute', default=1000, type="integer", help='number of permutation')
 parser$add_argument('--nlambda', default=100, type="integer", help='number of lambda sampled along the lasso path')
-parser$add_argument('--g_as_s', action='store_true', help='if provided, genes are also considered systems')
-parser$add_argument('--pos_only', action='store_true', help='if provided, coefficients are constrained to be positive')
+parser$add_argument('--g_as_s', action='store_true', default=FALSE, help='if provided, genes are also considered systems')
+parser$add_argument('--pos_only', action='store_true', default=FALSE, help='if provided, coefficients are constrained to be positive')
 
 args <- parser$parse_args()
 
