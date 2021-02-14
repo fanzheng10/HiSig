@@ -35,7 +35,7 @@ for d in dirs:
     # Hisig with id
     hisig_f = 'sim_ms_impact_id.txt'
     if os.path.isfile(hisig_f):
-        df_hisig = pd.read_csv(hisig_f, sep='\t', index_col=0)
+        df_hisig = pd.read_csv(hisig_f, sep='\t')
         df_hisig = df_hisig[['System.names','Selection.pressure', 'p']]
         df_hisig.set_index('System.names', inplace=True, drop=True)
         df_hisig.rename(columns={'p':'hisig.p.id','Selection.pressure':'hisig.score.id'}, inplace=True)
@@ -54,7 +54,7 @@ for d in dirs:
     # HiSig no id
     hisig_f = 'sim_ms_impact_noid.txt'
     if os.path.isfile(hisig_f):
-        df_hisig = pd.read_csv(hisig_f, sep='\t', index_col=0)
+        df_hisig = pd.read_csv(hisig_f, sep='\t')
         df_hisig = df_hisig[['System.names', 'p']]
         df_hisig.set_index('System.names', inplace=True, drop=True)
         df_hisig.rename(columns={'p':'hisig.p.noid','Selection.pressure':'hisig.score.noid'}, inplace=True)
