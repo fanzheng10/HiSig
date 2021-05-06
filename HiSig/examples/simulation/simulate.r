@@ -141,7 +141,7 @@ write.conn<-function(nlayers) {
   for (i in 1:(nlayers-1)) {
     coln = paste0('L', i)
     cols = paste0('L', i, '.select')
-    sel = unique(hier_data[hier_data[[cols]] == 1,][[coln]])
+    sel = unique(hier_data[hier_data[[cols]] != 0,][[coln]])
     if (length(sel) > 0) {
       sel = paste0(coln, '_', sel)
       sel_clusts <- c(sel_clusts, sel)
