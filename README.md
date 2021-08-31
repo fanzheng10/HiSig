@@ -1,9 +1,9 @@
 # HiSig
 Enrichment analysis for nested and overlapping gene sets
 
-# News
+## News
 
-HiSig now available as a self-contained R package!  
+HiSig now available as a self-contained R package.  
 
 Install beta version via `devtools::install_github("fanzheng10/HiSig", subdir="HiSig")`. See basic usage [here](https://github.com/fanzheng10/HiSig/blob/master/HiSig/examples/main.R). More documents and vignettes are under construction. 
 
