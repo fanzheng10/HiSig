@@ -5,7 +5,7 @@ HiSig is a method to identify a parsimonious list of gene sets (systems) to expl
 
 HiSig is one of the computational tools developed and described in the following study:
 
-[Interpretation of cancer mutations using a multiscale map of protein systems.](https://www.science.org/doi/10.1126/science.abf3067) F. Zheng et al., Science 374, eabf3067.
+F. Zheng et al., [Interpretation of cancer mutations using a multiscale map of protein systems.](https://www.science.org/doi/10.1126/science.abf3067) Science 374, eabf3067 (2021).
 
 ## Updates
 
