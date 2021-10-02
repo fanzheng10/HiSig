@@ -1,7 +1,7 @@
 # HiSig 
 
 # Introduction
-HiSig is a program to identify a parsimonious list of gene sets (systems) to explain the signals associated with individual genes. It satisfies the purpose of Gene Set Enrichment Analysis, but substantially reduces the redundancy in results when provided gene sets that are overlapping or nested (e.g. the gene sets in the Gene Ontology, or other hierarchically structured gene sets). HiSig applies Lasso at multiple stringency of L1-regularization.
+HiSig is a method to identify a parsimonious list of gene sets (systems) to explain the signals associated with individual genes. It satisfies the purpose of Gene Set Enrichment Analysis, but substantially reduces the redundancy in results when provided gene sets that are overlapping or nested (e.g. the gene sets in the Gene Ontology, or other hierarchically structured gene sets). HiSig applies Lasso at multiple stringency of L1-regularization.
 
 HiSig is one of the computational tools developed and described in the following study:
 
