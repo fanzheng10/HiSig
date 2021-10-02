@@ -1,6 +1,6 @@
 Package: HiSig
 Title: What the Package Does (One Line, Title Case)
-Version: 0.1
+Version: 0.1.0
 Authors@R: 
     person(given = "Fan",
            family = "Zheng",
@@ -17,4 +17,5 @@ Depends:
   glmnet (>= 2.0.0),
   Matrix (>= 1.2.0),
   parallel,
-  dplyr
+  dplyr,
+  argparse

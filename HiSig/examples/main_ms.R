@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+#/usr/bin/env Rscript
 devtools::install_github("fanzheng10/HiSig", subdir="HiSig")
 suppressPackageStartupMessages(library(argparse))
 library(HiSig)
